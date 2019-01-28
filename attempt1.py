@@ -134,9 +134,9 @@ def minimax(grid, grid_size, player):
     print_grid(grid, grid_size)
     if check_game_over(grid, grid_size):
         print "Game over, returning", str(calculate_score(grid, grid_size))
-        return calculate_score(grid, grid_size)
+        return [calculate_score(grid, grid_size), -1, -1]
 
-    best_score = [-float('inf'), -float('inf')]
+    best_score = [-float('inf'), -float('inf'), -1, -1]
 
     player_laser = player - 6
     if player == State.AI:
@@ -157,9 +157,13 @@ def minimax(grid, grid_size, player):
                 if player == State.P1:
                     if best_score[0] < score[0]:
                         best_score[0] = score[0]
+                        best_score[2] = i
+                        best_score[3] = j
                 if player == State.AI:
                     if best_score[1] < score[1]:
                         best_score[1] = score[1]
+                        best_score[2] = i
+                        best_score[3] = j
     print "returning score: ", str(best_score)
     return best_score
 
