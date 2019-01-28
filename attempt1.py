@@ -1,4 +1,3 @@
-from array import *
 from enum import Enum
 
 
@@ -54,60 +53,54 @@ def mark_player(grid, grid_size, x, y, player):
     for i in range(1, 4):
         if x-i >= 0 and grid[x-i][y] == State.WALL:
             break
-        elif x-i >= 0:
-            change_color(grid, grid_size, x-i, y, player)
+        change_color(grid, grid_size, x-i, y, player)
 
     # Lower 3
     for i in range(1, 4):
         if x+i < grid_size and grid[x+i][y] == State.WALL:
             break
-        if x+i < grid_size:
-            change_color(grid, grid_size, x+i, y, player)
+        change_color(grid, grid_size, x+i, y, player)
 
     # Left 3
     for i in range(1, 4):
         if y - i >= 0 and grid[x][y-i] == State.WALL:
             break
-        if y - i >= 0:
-            change_color(grid, grid_size, x, y-i, player)
+        change_color(grid, grid_size, x, y-i, player)
 
     # Right 3
     for i in range(1, 4):
         if y+i < grid_size and grid[x][y+i] == State.WALL:
             break
-        if y+i < grid_size:
-            change_color(grid, grid_size, x, y+i, player)
+        change_color(grid, grid_size, x, y+i, player)
 
     # Left Top Diagonal
     for i in range(1, 4):
         if x-i >= 0 and y-i >= 0 and grid[x-i][y-i] == State.WALL:
             break
-        if x-i >= 0 and y-i >= 0:
-            change_color(grid, grid_size, x-i, y-i, player)
+        change_color(grid, grid_size, x-i, y-i, player)
 
     # Right Top Diagonal
     for i in range(1,4):
         if x-i >= 0 and y+i < grid_size and grid[x-i][y+i] == State.WALL:
             break
-        if x-i >= 0 and y+i < grid_size:
-            change_color(grid, grid_size, x-i, y+i, player)
+        change_color(grid, grid_size, x-i, y+i, player)
 
     # Left Bottom Diagonal
     for i in range(1, 4):
         if x + i < grid_size and y - i >= 0 and grid[x + i][y - i] == State.WALL:
             break
-        if x + i < grid_size and y - i >= 0:
-            change_color(grid, grid_size, x+i, y-i, player)
+        change_color(grid, grid_size, x+i, y-i, player)
 
     # Right Bottom Diagonal
     for i in range(1, 4):
         if x + i < grid_size and y + i < grid_size and grid[x + i][y + i] == State.WALL:
             break
-        if x + i < grid_size and y + i < grid_size:
-            change_color(grid, grid_size, x+i, y+i, player)
+        change_color(grid, grid_size, x+i, y+i, player)
 
 
 def change_color(grid, grid_size, x, y, player):
+    if x < 0 or x >= grid_size or y < 0 or y >= grid_size:
+        return
     if grid[x][y] == player:
         return
     elif grid[x][y] == State.P1_LASER or grid[x][y] == State.P2_LASER:
@@ -118,11 +111,26 @@ def change_color(grid, grid_size, x, y, player):
         grid[x][y] = State.BOTH_AREA
 
 
+def calculate_score(grid, grid_size):
+    p1_score = 0
+    p2_score = 0
+    for i in range(grid_size):
+        for j in range(grid_size):
+            if grid[i][j] == State.P1_AREA or grid[i][j] == State.P1_LASER:
+                p1_score = p1_score + 1
+            elif grid[i][j] == State.P2_AREA or grid[i][j] == State.P2_LASER:
+                p2_score = p2_score + 1
+            elif grid[i][j] == State.BOTH_AREA:
+                p1_score = p1_score + 1
+                p2_score = p2_score + 1
+
+    return p1_score, p2_score
 
 def main():
     grid, grid_size = read_file()
     apply_moves(grid, grid_size)
     print_grid(grid, grid_size)
+    print calculate_score(grid, grid_size)
 
 
 if __name__ == '__main__':
