@@ -9,6 +9,8 @@ class State(Enum):
     P1_AREA = 4
     P2_AREA = 5
     BOTH_AREA = 6
+    P1 = 7
+    AI = 8
 
 
 def read_file():
@@ -126,11 +128,61 @@ def calculate_score(grid, grid_size):
 
     return p1_score, p2_score
 
+
+def minimax(grid, grid_size, player):
+    print "=======inside minimax=========", str(player)
+    print_grid(grid, grid_size)
+    if check_game_over(grid, grid_size):
+        print "Game over, returning", str(calculate_score(grid, grid_size))
+        return calculate_score(grid, grid_size)
+
+    best_score = [-float('inf'), -float('inf')]
+
+    player_laser = player - 6
+    if player == State.AI:
+        next_player = State.P1
+    else:
+        next_player = State.AI
+
+    # place in every empty cell and then un-place
+    for i in range(grid_size):
+        for j in range(grid_size):
+            if grid[i][j] == State.EMPTY:
+                state = [row[:] for row in grid]
+                state[i][j] = player_laser
+                mark_player(state, grid_size, i, j, player-6)
+                score = minimax(state, grid_size, next_player)
+                state[i][j] = State.EMPTY
+
+                if player == State.P1:
+                    if best_score[0] < score[0]:
+                        best_score[0] = score[0]
+                if player == State.AI:
+                    if best_score[1] < score[1]:
+                        best_score[1] = score[1]
+    print "returning score: ", str(best_score)
+    return best_score
+
+
+
+def my_turn(grid, grid_size):
+    if check_game_over(grid, grid_size):
+        print "Game over"
+        print_grid(grid, grid_size)
+        return
+
+    move = minimax(grid, grid_size)
+
+
+
 def main():
     grid, grid_size = read_file()
     apply_moves(grid, grid_size)
     print_grid(grid, grid_size)
     print calculate_score(grid, grid_size)
+
+    print minimax(grid, grid_size, State.P1)
+
 
 
 if __name__ == '__main__':
