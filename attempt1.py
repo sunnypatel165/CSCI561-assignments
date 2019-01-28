@@ -133,8 +133,9 @@ def minimax(grid, grid_size, player):
     print "=======inside minimax=========", str(player)
     print_grid(grid, grid_size)
     if check_game_over(grid, grid_size):
-        print "Game over, returning", str(calculate_score(grid, grid_size))
-        return [calculate_score(grid, grid_size), -1, -1]
+        p1_score, p2_score = calculate_score(grid, grid_size)
+        print "Game over, returning", str(p1_score), str(p2_score), " -1 - 1"
+        return [p1_score, p2_score, -1, -1]
 
     best_score = [-float('inf'), -float('inf'), -1, -1]
 
