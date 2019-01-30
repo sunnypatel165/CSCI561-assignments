@@ -1,20 +1,19 @@
 from enum import Enum
-
-
-class State(Enum):
-    EMPTY = 0
-    P1_LASER = 1
-    P2_LASER = 2
-    WALL = 3
-    P1_AREA = 4
-    P2_AREA = 5
-    BOTH_AREA = 6
-    P1 = 7
-    AI = 8
+debug = True
+# class State(Enum):
+EMPTY = 0
+P1_LASER = 1
+P2_LASER = 2
+WALL = 3
+P1_AREA = 4
+P2_AREA = 5
+BOTH_AREA = 6
+P1 = 7
+AI = 8
 
 
 def read_file():
-    f1 = open("input1.txt", "r")
+    f1 = open("input.txt", "r")
     grid_size = int(f1.readline())
     grid = [[-1 for x in range(grid_size)] for y in range(grid_size)]
 
@@ -22,6 +21,8 @@ def read_file():
         line = f1.readline().strip()
         for j in range(grid_size):
             grid[i][j] = int(line[j])
+    dprint("====read====")
+    dprint("====read done===")
     return grid, grid_size
 
 
@@ -51,51 +52,52 @@ def check_game_over(grid, grid_size):
 
 
 def mark_player(grid, grid_size, x, y, player):
+    dprint("Marking player" + str(player))
     # Upper 3
     for i in range(1, 4):
-        if x-i >= 0 and grid[x-i][y] == State.WALL:
+        if x-i >= 0 and grid[x-i][y] == WALL:
             break
         change_color(grid, grid_size, x-i, y, player)
 
     # Lower 3
     for i in range(1, 4):
-        if x+i < grid_size and grid[x+i][y] == State.WALL:
+        if x+i < grid_size and grid[x+i][y] == WALL:
             break
         change_color(grid, grid_size, x+i, y, player)
 
     # Left 3
     for i in range(1, 4):
-        if y - i >= 0 and grid[x][y-i] == State.WALL:
+        if y - i >= 0 and grid[x][y-i] == WALL:
             break
         change_color(grid, grid_size, x, y-i, player)
 
     # Right 3
     for i in range(1, 4):
-        if y+i < grid_size and grid[x][y+i] == State.WALL:
+        if y+i < grid_size and grid[x][y+i] == WALL:
             break
         change_color(grid, grid_size, x, y+i, player)
 
     # Left Top Diagonal
     for i in range(1, 4):
-        if x-i >= 0 and y-i >= 0 and grid[x-i][y-i] == State.WALL:
+        if x-i >= 0 and y-i >= 0 and grid[x-i][y-i] == WALL:
             break
         change_color(grid, grid_size, x-i, y-i, player)
 
     # Right Top Diagonal
     for i in range(1,4):
-        if x-i >= 0 and y+i < grid_size and grid[x-i][y+i] == State.WALL:
+        if x-i >= 0 and y+i < grid_size and grid[x-i][y+i] == WALL:
             break
         change_color(grid, grid_size, x-i, y+i, player)
 
     # Left Bottom Diagonal
     for i in range(1, 4):
-        if x + i < grid_size and y - i >= 0 and grid[x + i][y - i] == State.WALL:
+        if x + i < grid_size and y - i >= 0 and grid[x + i][y - i] == WALL:
             break
         change_color(grid, grid_size, x+i, y-i, player)
 
     # Right Bottom Diagonal
     for i in range(1, 4):
-        if x + i < grid_size and y + i < grid_size and grid[x + i][y + i] == State.WALL:
+        if x + i < grid_size and y + i < grid_size and grid[x + i][y + i] == WALL:
             break
         change_color(grid, grid_size, x+i, y+i, player)
 
@@ -103,14 +105,14 @@ def mark_player(grid, grid_size, x, y, player):
 def change_color(grid, grid_size, x, y, player):
     if x < 0 or x >= grid_size or y < 0 or y >= grid_size:
         return
-    if grid[x][y] == player:
+    if grid[x][y] == player or grid[x][y] == player+3:
         return
-    elif grid[x][y] == State.P1_LASER or grid[x][y] == State.P2_LASER:
+    elif grid[x][y] == P1_LASER or grid[x][y] == P2_LASER:
         return
-    elif grid[x][y] == State.EMPTY:
+    elif grid[x][y] == EMPTY:
         grid[x][y] = player+3
-    elif grid[x][y] == State.P1_AREA or grid[x][y] == State.P2_AREA:
-        grid[x][y] = State.BOTH_AREA
+    elif grid[x][y] == P1_AREA or grid[x][y] == P2_AREA:
+        grid[x][y] = BOTH_AREA
 
 
 def calculate_score(grid, grid_size):
@@ -118,75 +120,184 @@ def calculate_score(grid, grid_size):
     p2_score = 0
     for i in range(grid_size):
         for j in range(grid_size):
-            if grid[i][j] == State.P1_AREA or grid[i][j] == State.P1_LASER:
+            if grid[i][j] == P1_AREA or grid[i][j] == P1_LASER:
                 p1_score = p1_score + 1
-            elif grid[i][j] == State.P2_AREA or grid[i][j] == State.P2_LASER:
+            elif grid[i][j] == P2_AREA or grid[i][j] == P2_LASER:
                 p2_score = p2_score + 1
-            elif grid[i][j] == State.BOTH_AREA:
+            elif grid[i][j] == BOTH_AREA:
                 p1_score = p1_score + 1
                 p2_score = p2_score + 1
 
     return p1_score, p2_score
 
 
-def minimax(grid, grid_size, player):
-    print "=======inside minimax=========", str(player)
-    print_grid(grid, grid_size)
+def minimax2(grid, grid_size, player):
+    dprint("======inside minimax ========= " + str(player))
+    # print_grid(grid, grid_size)
     if check_game_over(grid, grid_size):
         p1_score, p2_score = calculate_score(grid, grid_size)
-        print "Game over, returning", str(p1_score), str(p2_score), " -1 - 1"
-        return [p1_score, p2_score, -1, -1]
+        dprint("terminal score: " + str(p1_score) + " " + str(p2_score))
+        return [p1_score, p2_score]
 
-    best_score = [-float('inf'), -float('inf'), -1, -1]
+    available_moves = get_empty_slots(grid, grid_size)
+    dprint("empty slots")
+    dprint(str(available_moves))
+    moves = []
+    for i in range(len(available_moves)):
+        move = [-1]*6
+        state = [row[:] for row in grid]
+        state[available_moves[i][0]][available_moves[i][1]] = player-6
+        mark_player(state, grid_size, available_moves[i][0], available_moves[i][1], player-6)
 
-    player_laser = player - 6
-    if player == State.AI:
-        next_player = State.P1
+        if player == AI:
+            result = minimax2(state, grid_size, P1)
+            move[0] = result[0]
+            move[1] = result[1]
+            move[4] = available_moves[i][0]
+            move[5] = available_moves[i][1]
+        else:
+            result = minimax2(state, grid_size, AI)
+            move[0] = result[0]
+            move[1] = result[1]
+            move[2] = available_moves[i][0]
+            move[3] = available_moves[i][1]
+        moves.append(move)
+
+    best_move = 0
+    if player == P1:
+        best_score = -10000
+        for i in range(len(moves)):
+            if moves[i][0] > best_score:
+                best_score = moves[i][0]
+                best_move = i
     else:
-        next_player = State.AI
+        best_score = 10000
+        for i in range(len(moves)):
+            if moves[i][1] > best_score:
+                best_score = moves[i][1]
+                best_move = i
 
-    # place in every empty cell and then un-place
+    dprint("==== moves ====")
+    dprint(str(moves))
+    dprint("==== moves done ====")
+    return moves[best_move]
+
+
+def get_empty_slots(grid, grid_size):
+    dprint("getting empty slots on ")
+    dprint(str(grid))
+    moves = []
     for i in range(grid_size):
         for j in range(grid_size):
-            if grid[i][j] == State.EMPTY:
-                state = [row[:] for row in grid]
-                state[i][j] = player_laser
-                mark_player(state, grid_size, i, j, player-6)
-                score = minimax(state, grid_size, next_player)
-                state[i][j] = State.EMPTY
+            if grid[i][j] == EMPTY:
+                moves.append((i, j))
+    return moves
 
-                if player == State.P1:
-                    if best_score[0] < score[0]:
-                        best_score[0] = score[0]
-                        best_score[2] = i
-                        best_score[3] = j
-                if player == State.AI:
-                    if best_score[1] < score[1]:
-                        best_score[1] = score[1]
-                        best_score[2] = i
-                        best_score[3] = j
-    print "returning score: ", str(best_score)
-    return best_score
+# def minimax(grid, grid_size, player):
+#     dprint("=======inside minimax=========" + str(player))
+#     if debug==True:
+#         print_grid(grid, grid_size)
+#     if check_game_over(grid, grid_size):
+#         p1_score, p2_score = calculate_score(grid, grid_size)
+#         dprint("Game over, returning " + str(p1_score) + " " + str(p2_score) + " -1 - 1 -1 -1")
+#         return [p1_score, p2_score, -1, -1, -1, -1]
+#
+#     best_score = [-float('inf'), -float('inf'), -1, -1, -1, -1]
+#
+#     player_laser = player - 6
+#     if player == AI:
+#         next_player = P1
+#     else:
+#         next_player = AI
+#
+#     # place in every empty cell and then un-place
+#     for i in range(grid_size):
+#         for j in range(grid_size):
+#             if grid[i][j] == EMPTY:
+#
+#                 state = [row[:] for row in grid]
+#                 state[i][j] = player_laser
+#                 mark_player(state, grid_size, i, j, player-6)
+#
+#                 score = minimax(state, grid_size, next_player)
+#
+#                 state = [row[:] for row in grid]
+#                 dprint("Player: " + str(player) + str(score))
+#
+#                 if player == P1:
+#                     state[score[2]][score[3]] = 1
+#                     mark_player(state, grid_size, i, j, 1)
+#
+#                 else:
+#                     state[score[4]][score[5]] = 2
+#                     mark_player(state, grid_size, i, j, 2)
+#
+#                 if best_score[0] < score[0]:
+#                     best_score[0] = score[0]
+#                     if player == P1:
+#                         best_score[2] = i
+#                         best_score[3] = j
+#                     if player == AI:
+#                         best_score[4] = i
+#                         best_score[5] = j
+#
+#                 if best_score[1] < score[1]:
+#                     best_score[1] = score[1]
+#                     if player == P1:
+#                         best_score[2] = i
+#                         best_score[3] = j
+#                     if player == AI:
+#                         best_score[4] = i
+#                         best_score[5] = j
+#
+#
+#                 dprint("current best score: " + str(best_score))
+#                 dprint("returning score: " + str(best_score))
+#     return best_score
 
 
+def init_minimax(grid, grid_size, player):
+    ans1 = -1
+    x=-1
+    y=-1
+    available_moves = get_empty_slots(grid, grid_size)
+    for i in range(len(available_moves)):
+        dprint(str(available_moves[i]))
+        state = [row[:] for row in grid]
+        state[available_moves[i][0]][available_moves[i][1]] = player - 6
+        mark_player(state, grid_size, available_moves[i][0], available_moves[i][1], player-6)
+        dprint("=========Starting minimax================ with ")
+        curr_ans = minimax2(state, grid_size, AI)
+        dprint("Final score for placing on: " + str(available_moves[i]) + " " + str(curr_ans))
+        if curr_ans[0] > curr_ans[1]:
+            x = available_moves[i][0]
+            y = available_moves[i][1]
+            if debug == False:
+                f2 = open("output.txt", "w")
+                str2 = str(x) + " " + str(y) + "\n"
+                f2.write(str2)
+            else:
+                print str(x) + " " + str(y)
+            break
 
-def my_turn(grid, grid_size):
-    if check_game_over(grid, grid_size):
-        print "Game over"
-        print_grid(grid, grid_size)
-        return
+        if ans1 < curr_ans[0]:
+            ans1 = curr_ans[0]
+            x = available_moves[i][0]
+            y = available_moves[i][1]
 
-    move = minimax(grid, grid_size)
 
+def dprint(line):
+    if debug == True:
+        print line
 
 
 def main():
     grid, grid_size = read_file()
     apply_moves(grid, grid_size)
-    print_grid(grid, grid_size)
-    print calculate_score(grid, grid_size)
-
-    print minimax(grid, grid_size, State.P1)
+    # print_grid(grid, grid_size)
+    dprint(calculate_score(grid, grid_size))
+    init_minimax(grid, grid_size, 7)
+    #move = minimax(grid, grid_size, 7)
 
 
 
