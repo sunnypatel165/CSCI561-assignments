@@ -131,37 +131,49 @@ def calculate_score(grid, grid_size):
     return p1_score, p2_score
 
 
-def minimax2(grid, grid_size, player):
+def minimax2(grid, grid_size, player, alpha, beta):
     dprint("======inside minimax ========= " + str(player))
-    # print_grid(grid, grid_size)
+    print_grid(grid, grid_size)
     if check_game_over(grid, grid_size):
         p1_score, p2_score = calculate_score(grid, grid_size)
         dprint("terminal score: " + str(p1_score) + " " + str(p2_score))
-        return [p1_score, p2_score]
+        return [p1_score, p2_score, -1, -1, -1, -1, p1_score-p2_score]
 
     available_moves = get_empty_slots(grid, grid_size)
     dprint("empty slots")
     dprint(str(available_moves))
     moves = []
     for i in range(len(available_moves)):
-        move = [-1]*6
+        move = [-1]*7
         state = [row[:] for row in grid]
         state[available_moves[i][0]][available_moves[i][1]] = player-6
         mark_player(state, grid_size, available_moves[i][0], available_moves[i][1], player-6)
 
         if player == AI:
-            result = minimax2(state, grid_size, P1)
+            result = minimax2(state, grid_size, P1, alpha, beta)
+            if result[6] < beta:
+                beta = result[0] - result[1]
+
             move[0] = result[0]
             move[1] = result[1]
             move[4] = available_moves[i][0]
             move[5] = available_moves[i][1]
+            move[6] = result[6]
         else:
-            result = minimax2(state, grid_size, AI)
+            result = minimax2(state, grid_size, AI, alpha, beta)
+
+            if result[6] > alpha:
+                alpha = result[0]-result[1]
+
             move[0] = result[0]
             move[1] = result[1]
             move[2] = available_moves[i][0]
             move[3] = available_moves[i][1]
+            move[6] = result[6]
         moves.append(move)
+        print "alpha beta " + str(alpha) + " " + str(beta)
+        if alpha >= beta:
+            break
 
     best_move = 0
     if player == P1:
@@ -258,8 +270,8 @@ def get_empty_slots(grid, grid_size):
 
 def init_minimax(grid, grid_size, player):
     ans1 = -1
-    x=-1
-    y=-1
+    x = -1
+    y = -1
     available_moves = get_empty_slots(grid, grid_size)
     for i in range(len(available_moves)):
         dprint(str(available_moves[i]))
@@ -267,24 +279,30 @@ def init_minimax(grid, grid_size, player):
         state[available_moves[i][0]][available_moves[i][1]] = player - 6
         mark_player(state, grid_size, available_moves[i][0], available_moves[i][1], player-6)
         dprint("=========Starting minimax================ with ")
-        curr_ans = minimax2(state, grid_size, AI)
+        curr_ans = minimax2(state, grid_size, AI, -float('inf'), float('inf'))
         dprint("Final score for placing on: " + str(available_moves[i]) + " " + str(curr_ans))
-        if curr_ans[0] > curr_ans[1]:
-            x = available_moves[i][0]
-            y = available_moves[i][1]
-            if debug == False:
-                f2 = open("output.txt", "w")
-                str2 = str(x) + " " + str(y) + "\n"
-                f2.write(str2)
-            else:
-                print str(x) + " " + str(y)
-            break
+        # if curr_ans[0] > curr_ans[1]:
+        #     x = available_moves[i][0]
+        #     y = available_moves[i][1]
+        #     if debug == False:
+        #         f2 = open("output.txt", "w")
+        #         str2 = str(x) + " " + str(y) + "\n"
+        #         f2.write(str2)
+        #     else:
+        #         print str(x) + " " + str(y)
+        #     break
 
         if ans1 < curr_ans[0]:
             ans1 = curr_ans[0]
             x = available_moves[i][0]
             y = available_moves[i][1]
 
+    if debug == False:
+        f2 = open("output.txt", "w")
+        str2 = str(x) + " " + str(y) + "\n"
+        f2.write(str2)
+    else:
+        print str(x) + " " + str(y)
 
 def dprint(line):
     if debug == True:
