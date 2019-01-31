@@ -127,79 +127,17 @@ def calculate_score(grid, grid_size):
             elif grid[i][j] == BOTH_AREA:
                 p1_score = p1_score + 1
                 p2_score = p2_score + 1
-    dprint("calculated score " + str(p1_score) + " " + str(p2_score))
-    if p1_score > p2_score:
-        return 10
-    else:
-        return -10
 
+    return p1_score - p2_score
 
-def minimax(grid, grid_size, player):
-    dprint("====inside minimax=====" + str(player))
-    if check_game_over(grid, grid_size):
-        return calculate_score(grid, grid_size)
-
-    if player == P1:
-        return get_max(grid, grid_size, P1)
-    else:
-        return get_min(grid, grid_size, AI)
-
-
-def get_min(grid, grid_size, player):
-    dprint("============inside get_min " + str(player))
-    best_score = 100000
-    best_move = [-1, -1]
-    if player == AI:
-        next_player = P1
-    else:
-        next_player = AI
-    available_moves = get_empty_slots(grid, grid_size)
-    for i in range(len(available_moves)):
-        state = [row[:] for row in grid]
-        state[available_moves[i][0]][available_moves[i][1]] = player - 6
-        mark_player(state, grid_size, available_moves[i][0], available_moves[i][1], player - 6)
-        dprint("making move: " + str(available_moves[i]))
-        print_grid(state, grid_size)
-        score = minimax(state, grid_size, next_player)
-        if score <= best_score:
-            best_score = score
-            best_move = available_moves[i]
-
-    dprint("get min best move " + str(best_move) + " \nbest score " + str(best_score))
-    grid[best_move[0]][best_move[1]] = player - 6
-    mark_player(grid, grid_size, available_moves[i][0], available_moves[i][1], player - 6)
-    #return best_move
-
-def get_max(grid, grid_size, player):
-    dprint("================inside get_max " + str(player))
-    best_score = -100000
-    best_move = [-1, -1]
-    if player == AI:
-        next_player = P1
-    else:
-        next_player = AI
-    available_moves = get_empty_slots(grid, grid_size)
-    for i in range(len(available_moves)):
-        state = [row[:] for row in grid]
-        state[available_moves[i][0]][available_moves[i][1]] = player - 6
-        mark_player(state, grid_size, available_moves[i][0], available_moves[i][1], player - 6)
-        dprint("making move: " + str(available_moves[i]))
-        print_grid(state, grid_size)
-        score = minimax(state, grid_size, next_player)
-        if score >= best_score:
-            best_score = score
-            best_move[0] = available_moves[i][0]
-            best_move[1] = available_moves[i][1]
-
-    dprint("get max best move " + str(best_move) + " \nbest score " + str(best_score))
-    grid[best_move[0]][best_move[1]] = player - 6
-    mark_player(grid, grid_size, available_moves[i][0], available_moves[i][1], player - 6)
-    return best_move
+def dprint(line):
+    if debug == True:
+        print line
 
 
 def get_empty_slots(grid, grid_size):
     dprint("getting empty slots on ")
-    print_grid(grid, grid_size)
+    dprint(str(grid))
     moves = []
     for i in range(grid_size):
         for j in range(grid_size):
@@ -208,19 +146,72 @@ def get_empty_slots(grid, grid_size):
     return moves
 
 
-def dprint(line):
-    if debug == True:
-        print line
+def max_value(grid, grid_size, player):
+    print "inside max " + str(player)
+    if player == AI:
+        next_player = P1
+    else:
+        next_player = AI
+    if check_game_over(grid, grid_size):
+        score = calculate_score(grid, grid_size)
+        return score
+    available_moves = get_empty_slots(grid, grid_size)
+    score = -float('inf')
+    for i in range(len(available_moves)):
+        state = [row[:] for row in grid]
+        state[available_moves[i][0]][available_moves[i][1]] = player - 6
+        mark_player(state, grid_size, available_moves[i][0], available_moves[i][1], player - 6)
+        new_score = min_value(state, grid_size, next_player)
 
+        if new_score > score:
+            new_score = score
+
+
+    print("Max value score = " + str(score))
+    return new_score
+
+
+def min_value(grid, grid_size, player):
+    print "inside min " + str(player)
+    if player == AI:
+        next_player = P1
+    else:
+        next_player = AI
+    if check_game_over(grid, grid_size):
+        score = calculate_score(grid, grid_size)
+        return score
+    available_moves = get_empty_slots(grid, grid_size)
+    score = float('inf')
+    for i in range(len(available_moves)):
+        state = [row[:] for row in grid]
+        state[available_moves[i][0]][available_moves[i][1]] = player - 6
+        mark_player(state, grid_size, available_moves[i][0], available_moves[i][1], player - 6)
+        new_score = min_value(state, grid_size, next_player)
+
+        if new_score > score:
+            new_score = score
+
+    print("Min value score = " + str(score))
+    return new_score
+
+
+def minimax(grid, grid_size, player):
+    available_moves = get_empty_slots(grid, grid_size)
+    score = - float('inf')
+    for i in range(len(available_moves)):
+        state = [row[:] for row in grid]
+        state[available_moves[i][0]][available_moves[i][1]] = player - 6
+        mark_player(state, grid_size, available_moves[i][0], available_moves[i][1], player - 6)
+        score = max(score,  min_value(state, grid_size, AI))
+    return score
 
 def main():
     grid, grid_size = read_file()
     apply_moves(grid, grid_size)
     # print_grid(grid, grid_size)
     dprint(calculate_score(grid, grid_size))
-    dprint(minimax(grid, grid_size, 7))
-    dprint("final grid")
-    print_grid(grid, grid_size)
+    print(minimax(grid, grid_size, 7))
+    #move = minimax(grid, grid_size, 7)
 
 
 if __name__ == '__main__':
