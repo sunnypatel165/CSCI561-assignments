@@ -1,5 +1,5 @@
 from enum import Enum
-debug = True
+debug = False
 # class State(Enum):
 EMPTY = 0
 P1_LASER = 1
@@ -27,6 +27,8 @@ def read_file():
 
 
 def print_grid(grid, grid_size):
+    if debug==False:
+        return
     s = ""
     for i in range(grid_size):
         for j in range(grid_size):
@@ -137,7 +139,7 @@ def dprint(line):
 
 def get_empty_slots(grid, grid_size):
     dprint("getting empty slots on ")
-    dprint(str(grid))
+    print_grid(grid, grid_size)
     moves = []
     for i in range(grid_size):
         for j in range(grid_size):
@@ -147,62 +149,83 @@ def get_empty_slots(grid, grid_size):
 
 
 def max_value(grid, grid_size, player):
-    print "inside max " + str(player)
+    dprint("inside max " + str(player))
     if player == AI:
         next_player = P1
     else:
         next_player = AI
     if check_game_over(grid, grid_size):
         score = calculate_score(grid, grid_size)
-        return score
+        return [score, -1, -1, -1, -1, -1]
     available_moves = get_empty_slots(grid, grid_size)
-    score = -float('inf')
+    score = [-float('inf'), -1, -1, -1, -1]
     for i in range(len(available_moves)):
         state = [row[:] for row in grid]
         state[available_moves[i][0]][available_moves[i][1]] = player - 6
         mark_player(state, grid_size, available_moves[i][0], available_moves[i][1], player - 6)
+        dprint("=======")
+        dprint("played move " + str(available_moves[i][0]) + " " + str(available_moves[i][1]))
+        print_grid(state, grid_size)
+        dprint("=======")
         new_score = min_value(state, grid_size, next_player)
 
-        if new_score > score:
-            new_score = score
 
+        dprint("score inside max " + str(new_score) + " " + str(score))
+        if new_score[1] > score[0]:
+            score[0] = new_score[1]
+            score[1] = available_moves[i][0]
+            score[2] = available_moves[i][1]
 
-    print("Max value score = " + str(score))
-    return new_score
+    dprint("Max value score = " + str(score))
+    return score
 
 
 def min_value(grid, grid_size, player):
-    print "inside min " + str(player)
+    dprint("inside min " + str(player))
     if player == AI:
         next_player = P1
     else:
         next_player = AI
     if check_game_over(grid, grid_size):
         score = calculate_score(grid, grid_size)
-        return score
+        return [-1, score, -1, -1, -1, -1]
     available_moves = get_empty_slots(grid, grid_size)
-    score = float('inf')
+    score = [-1, float('inf'), -1, -1, -1, -1]
     for i in range(len(available_moves)):
         state = [row[:] for row in grid]
         state[available_moves[i][0]][available_moves[i][1]] = player - 6
         mark_player(state, grid_size, available_moves[i][0], available_moves[i][1], player - 6)
-        new_score = min_value(state, grid_size, next_player)
+        dprint("=======")
+        dprint("played move " + str(available_moves[i][0]) + " " + str(available_moves[i][1]))
+        print_grid(state, grid_size)
+        dprint("=======")
+        new_score = max_value(state, grid_size, next_player)
 
-        if new_score > score:
-            new_score = score
+        dprint("score inside min " + str(new_score) + " " + str(score))
+        if new_score[0] < score[1]:
+            score[1] = new_score[0]
+            score[3] = available_moves[i][0]
+            score[4] = available_moves[i][1]
 
-    print("Min value score = " + str(score))
-    return new_score
+    dprint("Min value score = " + str(score))
+    return score
 
 
 def minimax(grid, grid_size, player):
     available_moves = get_empty_slots(grid, grid_size)
-    score = - float('inf')
+    score = [-float('inf'), -1, -1, -1, -1]
+
     for i in range(len(available_moves)):
         state = [row[:] for row in grid]
         state[available_moves[i][0]][available_moves[i][1]] = player - 6
         mark_player(state, grid_size, available_moves[i][0], available_moves[i][1], player - 6)
-        score = max(score,  min_value(state, grid_size, AI))
+        new_score = min_value(state, grid_size, AI)
+        dprint("score inside minimax " + str(new_score) + " " + str(score))
+        if new_score[1] > score[0]:
+            score[0] = new_score[1]
+            score[1] = available_moves[i][0]
+            score[2] = available_moves[i][1]
+
     return score
 
 def main():
@@ -210,7 +233,16 @@ def main():
     apply_moves(grid, grid_size)
     # print_grid(grid, grid_size)
     dprint(calculate_score(grid, grid_size))
-    print(minimax(grid, grid_size, 7))
+
+    score = minimax(grid, grid_size, 7)
+    x = score[1]
+    y = score[2]
+    if debug == False:
+        f2 = open("output.txt", "w")
+        str2 = str(x) + " " + str(y) + "\n"
+        f2.write(str2)
+    else:
+        print str(x) + " " + str(y)
     #move = minimax(grid, grid_size, 7)
 
 
