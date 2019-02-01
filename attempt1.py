@@ -132,7 +132,7 @@ def calculate_score(grid, grid_size):
 
 
 def minimax2(grid, grid_size, player, alpha, beta):
-    dprint("======inside minimax ========= " + str(player))
+    dprint("======inside minimax ========= " + str(player) + str(player==AI) + " " + str(player==P1))
     print_grid(grid, grid_size)
     if check_game_over(grid, grid_size):
         p1_score, p2_score = calculate_score(grid, grid_size)
@@ -149,9 +149,22 @@ def minimax2(grid, grid_size, player, alpha, beta):
         state[available_moves[i][0]][available_moves[i][1]] = player-6
         mark_player(state, grid_size, available_moves[i][0], available_moves[i][1], player-6)
 
-        if player == AI:
+        if player == P1:
+            result = minimax2(state, grid_size, AI, alpha, beta)
+            dprint("Comparing alpha " + str(result[0]) + " " + str(result[1]) + " " + str(alpha) + " " + str(beta))
+            if result[0] - result[1] >= alpha:
+                alpha = result[0] - result[1]
+
+            move[0] = result[0]
+            move[1] = result[1]
+            move[2] = available_moves[i][0]
+            move[3] = available_moves[i][1]
+            move[6] = result[6]
+
+        else:
             result = minimax2(state, grid_size, P1, alpha, beta)
-            if result[6] < beta:
+            dprint("Comparing beta " + str(result[0]) + " " + str(result[1]) + " " + str(alpha) + " " + str(beta))
+            if result[0] - result[1] < beta:
                 beta = result[0] - result[1]
 
             move[0] = result[0]
@@ -159,17 +172,7 @@ def minimax2(grid, grid_size, player, alpha, beta):
             move[4] = available_moves[i][0]
             move[5] = available_moves[i][1]
             move[6] = result[6]
-        else:
-            result = minimax2(state, grid_size, AI, alpha, beta)
 
-            if result[6] > alpha:
-                alpha = result[0]-result[1]
-
-            move[0] = result[0]
-            move[1] = result[1]
-            move[2] = available_moves[i][0]
-            move[3] = available_moves[i][1]
-            move[6] = result[6]
         moves.append(move)
         print "alpha beta " + str(alpha) + " " + str(beta)
         if alpha >= beta:
