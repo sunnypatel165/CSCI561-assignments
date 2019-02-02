@@ -1,5 +1,6 @@
 from copy import copy, deepcopy
 from enum import Enum
+import collections
 
 # ----------------Variables-------------------
 # To enable debug level prints
@@ -27,6 +28,9 @@ AI = 8
 # Files
 input_file = "input1.txt"
 output_file = "output.txt"
+
+# List of available moves sorted based on the value
+available_moves_dict = {}
 
 
 # ----------------Utilities-------------------
@@ -251,6 +255,22 @@ def get_empty_slots(grid, grid_size, player):
     return moves
 
 
+# Returns empty slots with live flag
+def get_empty_slots_with_live(grid, grid_size, player):
+    dprint("getting EMPTY slots on ")
+    print_grid(grid, grid_size)
+    available_moves = {}
+    global available_moves_dict
+    # Collect all the moves
+    for i in xrange(grid_size):
+        for j in xrange(grid_size):
+            if grid[i][j] == EMPTY:
+                available_moves[(i, j)] = 1
+
+    available_moves_dict = collections.OrderedDict(sorted(available_moves.items(), key=lambda move: check_move_value(grid, grid_size, move[0][0], move[0][1], player), reverse=True))
+    dprint("sorted moves with live" + str(available_moves_dict))
+
+
 # Computes the value of placing a laser here
 def check_move_value(grid, grid_size, x, y, player):
     state = [row[:] for row in grid]
@@ -397,6 +417,8 @@ def min_value(grid, grid_size, player):
 
 
 def minimax(grid, grid_size, player):
+    available_moves = get_empty_slots_with_live(grid, grid_size, player)
+    dprint("live map")
     return max_value(grid, grid_size, P1)
 
 
