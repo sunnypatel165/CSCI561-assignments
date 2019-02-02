@@ -1,7 +1,7 @@
 def check_game_over(grid, grid_size):
     print 1
 def read_file():
-    f1 = open("input.txt", "r")
+    f1 = open("input5.txt", "r")
     grid_size = int(f1.readline())
     print(grid_size)
 

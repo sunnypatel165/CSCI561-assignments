@@ -5,7 +5,7 @@ import copy
 power = 3
 
 # Reading Input File
-f_in = open("./input.txt", "r")
+f_in = open("./input5.txt", "r")
 
 # Fetching the board size
 n = int(f_in.readline().strip())
