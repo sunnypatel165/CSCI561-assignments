@@ -1,5 +1,3 @@
-from copy import copy, deepcopy
-from enum import Enum
 import collections
 
 # ----------------Variables-------------------
@@ -58,6 +56,13 @@ def print_grid(grid, grid_size):
             s = s + str(grid[i][j]) + " "
         s += '\n'
     print s
+
+
+# Returns true if this is a valid position in the grid
+def is_valid_position(grid, grid_size, x , y ):
+    if x < 0 or x >= grid_size or y < 0 or y >= grid_size:
+        return False
+    return True
 
 
 # Debug level print
@@ -142,54 +147,6 @@ def mark_player(grid, grid_size, x, y, player):
             break
 
 
-#    for i in xrange(1, 4):
-#        if x-i >= 0 and grid[x-i][y] == WALL:
-#            break
-#        change_color(grid, grid_size, x-i, y, player)
-#
-#    # Lower 3
-#    for i in xrange(1, 4):
-#        if x+i < grid_size and grid[x+i][y] == WALL:
-#            break
-#        change_color(grid, grid_size, x+i, y, player)
-#
-#    # Left 3
-#    for i in xrange(1, 4):
-#        if y - i >= 0 and grid[x][y-i] == WALL:
-#            break
-#        change_color(grid, grid_size, x, y-i, player)
-#
-#    # Right 3
-#    for i in xrange(1, 4):
-#        if y+i < grid_size and grid[x][y+i] == WALL:
-#            break
-#        change_color(grid, grid_size, x, y+i, player)
-#
-#    # Left Top Diagonal
-#    for i in xrange(1, 4):
-#        if x-i >= 0 and y-i >= 0 and grid[x-i][y-i] == WALL:
-#            break
-#        change_color(grid, grid_size, x-i, y-i, player)
-#
-#    # Right Top Diagonal
-#    for i in xrange(1,4):
-#        if x-i >= 0 and y+i < grid_size and grid[x-i][y+i] == WALL:
-#            break
-#        change_color(grid, grid_size, x-i, y+i, player)
-#
-#    # Left Bottom Diagonal
-#    for i in xrange(1, 4):
-#        if x + i < grid_size and y - i >= 0 and grid[x + i][y - i] == WALL:
-#            break
-#        change_color(grid, grid_size, x+i, y-i, player)
-#
-#    # Right Bottom Diagonal
-#    for i in xrange(1, 4):
-#        if x + i < grid_size and y + i < grid_size and grid[x + i][y + i] == WALL:
-#            break
-#        change_color(grid, grid_size, x+i, y+i, player)
-
-
 # Changes color of a cell
 def change_color(grid, grid_size, x, y, player):
     # Bounds check
@@ -219,6 +176,63 @@ def change_color(grid, grid_size, x, y, player):
     return True
 
 
+# Marks affected cells by this move as un-live and returns them as a list
+def get_affected_cells(grid, grid_size, x, y):
+
+    affected_cells = [(x, y)]
+    available_moves_dict[(x, y)] = -1
+    # Upper 3
+    for i in xrange(1, 4):
+        if is_valid_position(grid, grid_size, x - i, y) and grid[x - i][y] == EMPTY:
+            affected_cells.append((x - i, y))
+            available_moves_dict[(x - i, y)] = -1
+
+    # Lower 3
+    for i in xrange(1, 4):
+        if is_valid_position(grid, grid_size, x + i, y,) and grid[x + i][y] == EMPTY:
+            affected_cells.append((x + i, y))
+            available_moves_dict[(x + i, y)] = -1
+
+    # Left 3
+    for i in xrange(1, 4):
+        if is_valid_position(grid, grid_size, x, y - i ) and grid[x][y - i] == EMPTY:
+            affected_cells.append((x, y - i))
+            available_moves_dict[(x, y - i)] = -1
+
+    # Right 3
+    for i in xrange(1, 4):
+        if is_valid_position(grid, grid_size, x, y + i,) and grid[x][y + i] == EMPTY:
+            affected_cells.append((x, y + i))
+            available_moves_dict[(x, y + i)] = -1
+
+    # Left Top Diagonal
+    for i in xrange(1, 4):
+        if is_valid_position(grid, grid_size, x - i, y - i ) and grid[x - i][y - i] == EMPTY:
+            affected_cells.append((x - i, y - i))
+            available_moves_dict[(x - i, y - i)] = -1
+
+    # Right Top Diagonal
+    for i in xrange(1, 4):
+        if is_valid_position(grid, grid_size, x - i, y + i) and grid[x - i][y + i] == EMPTY:
+            affected_cells.append((x - i, y + i))
+            available_moves_dict[(x - i, y + i)] = -1
+
+    # Left Bottom Diagonal
+    for i in xrange(1, 4):
+        if is_valid_position(grid, grid_size, x + i, y - i) and grid[x + i][y - i] == EMPTY:
+            affected_cells.append((x + i, y - i))
+            available_moves_dict[(x + i, y - i)] = -1
+
+    # Right Bottom Diagonal
+    for i in xrange(1, 4):
+        if is_valid_position(grid, grid_size, x + i, y + i) and grid[x + i][y + i] == EMPTY:
+            affected_cells.append((x + i, y + i))
+            available_moves_dict[(x + i, y + i)] = -1
+
+    dprint("affected rows detected: " + str(affected_cells))
+    dprint("affected moves: " + str(available_moves_dict))
+    return affected_cells
+
 # Calculates both player's scores and retuns 2 values
 def calculate_score(grid, grid_size):
     p1_score = 0
@@ -237,22 +251,10 @@ def calculate_score(grid, grid_size):
     return p1_score, p2_score
 
 
-# Gets All empty slots sorted by the absolute value of each move's value
-def get_empty_slots(grid, grid_size, player):
-    dprint("getting EMPTY slots on ")
-    print_grid(grid, grid_size)
-
-    # Collect all the moves
-    moves = []
-    for i in xrange(grid_size):
-        for j in xrange(grid_size):
-            if grid[i][j] == EMPTY:
-                moves.append((i, j))
-
-    # Sort the moves based on values
-    moves.sort(key=lambda move: check_move_value(grid, grid_size, move[0], move[1], player), reverse=True)
-    dprint("sorted moves " + str(moves))
-    return moves
+# Marks given slots as live
+def mark_live(affected_cells):
+    for cell in affected_cells:
+        available_moves_dict[cell] = 1
 
 
 # Returns empty slots with live flag
@@ -266,9 +268,18 @@ def get_empty_slots_with_live(grid, grid_size, player):
         for j in xrange(grid_size):
             if grid[i][j] == EMPTY:
                 available_moves[(i, j)] = 1
-
-    available_moves_dict = collections.OrderedDict(sorted(available_moves.items(), key=lambda move: check_move_value(grid, grid_size, move[0][0], move[0][1], player), reverse=True))
+    available_moves_sorted = sorted(available_moves.items(), key=lambda move: check_move_value(grid, grid_size, move[0][0], move[0][1], player), reverse=True)
+    available_moves_dict = collections.OrderedDict(available_moves_sorted)
     dprint("sorted moves with live" + str(available_moves_dict))
+
+
+# Returns a list of all live spots
+def get_all_live_slots():
+    live_slots = []
+    for i in available_moves_dict.keys():
+        if available_moves_dict[i] == 1:
+            live_slots.append(i)
+        return live_slots
 
 
 # Computes the value of placing a laser here
@@ -306,30 +317,37 @@ def max_value(grid, grid_size, player):
             return [-10, -1, -1, -1, -1]
 
     # Get available positions for the board
-    available_moves = get_empty_slots(grid, grid_size, player)
+    available_moves = get_all_live_slots()
 
     # Initialise score to -inf
     score = [-10000, -1, -1, -1, -1]
 
     # For every possible move
-    for i in xrange(len(available_moves)):
+    for move in available_moves:
 
+        dprint("move" + str(move))
         # Create a copy of the grid
         # state = deepcopy(grid)
         state = [row[:] for row in grid]
 
+        # Get the cells affected by this move, eventually used to undo the move
+        affected_cells = get_affected_cells(grid, grid_size, move[0], move[1])
+
         # Mark the grid
-        state[available_moves[i][0]][available_moves[i][1]] = player - 6
-        mark_player(state, grid_size, available_moves[i][0], available_moves[i][1], player - 6)
+        state[move[0]][move[1]] = player - 6
+        mark_player(state, grid_size, move[0], move[1], player - 6)
 
         # Print
         dprint("=======")
-        dprint("played move " + str(available_moves[i][0]) + " " + str(available_moves[i][1]))
+        dprint("played move " + str(move[0]) + " " + str(move[1]))
         print_grid(state, grid_size)
         dprint("=======")
 
         # Call min function on this stae
         new_score = min_value(state, grid_size, next_player)
+
+        # Undo move by marking the affected cells live
+        mark_live(affected_cells)
 
         dprint("score inside max " + str(new_score) + " " + str(score))
 
@@ -339,8 +357,8 @@ def max_value(grid, grid_size, player):
             score[0] = new_score[0]
 
             # P1's move marked at indicies 1 and 2
-            score[1] = available_moves[i][0]
-            score[2] = available_moves[i][1]
+            score[1] = move[0]
+            score[2] = move[1]
 
             # P2's move copied over
             score[3] = new_score[3]
@@ -372,24 +390,27 @@ def min_value(grid, grid_size, player):
             return [-10, -1, -1, -1, -1]
 
     # Get available positions for the board
-    available_moves = get_empty_slots(grid, grid_size, player)
+    available_moves = get_all_live_slots()
 
     # Initialise score to +inf
     score = [10000, -1, -1, -1, -1]
 
     # For every possible move
-    for i in xrange(len(available_moves)):
+    for move in available_moves:
 
         # Create a copy of the grid
         # state = deepcopy(grid)
         state = [row[:] for row in grid]
 
+        # Get the cells affected by this move, eventually used to undo the move
+        affected_cells = get_affected_cells(grid, grid_size, move[0], move[1])
+
         # Mark the grid
-        state[available_moves[i][0]][available_moves[i][1]] = player - 6
-        mark_player(state, grid_size, available_moves[i][0], available_moves[i][1], player - 6)
+        state[move[0]][move[1]] = player - 6
+        mark_player(state, grid_size, move[0], move[1], player - 6)
 
         dprint("=======")
-        dprint("played move " + str(available_moves[i][0]) + " " + str(available_moves[i][1]))
+        dprint("played move " + str(move[0]) + " " + str(move[1]))
         print_grid(state, grid_size)
         dprint("=======")
 
@@ -406,8 +427,11 @@ def min_value(grid, grid_size, player):
             score[2] = new_score[2]
 
             # P2's move marked at indicies 3 and 4
-            score[3] = available_moves[i][0]
-            score[4] = available_moves[i][1]
+            score[3] = move[0]
+            score[4] = move[1]
+
+        # Undo move by marking the affected cells live
+        mark_live(affected_cells)
 
         # Prune
         if score[0] < 0:
@@ -417,7 +441,7 @@ def min_value(grid, grid_size, player):
 
 
 def minimax(grid, grid_size, player):
-    available_moves = get_empty_slots_with_live(grid, grid_size, player)
+    get_empty_slots_with_live(grid, grid_size, player)
     dprint("live map")
     return max_value(grid, grid_size, P1)
 
