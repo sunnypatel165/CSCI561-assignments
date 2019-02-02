@@ -253,8 +253,8 @@ def get_empty_slots(grid, grid_size, player):
 
 # Computes the value of placing a laser here
 def check_move_value(grid, grid_size, x, y, player):
-    # CellState = [row[:] for row in grid]
-    state = deepcopy(grid)
+    state = [row[:] for row in grid]
+    # state = deepcopy(grid)
 
     # Mark the player
     state[x][y] = player - 6
@@ -295,7 +295,8 @@ def max_value(grid, grid_size, player, alpha, beta):
     for i in xrange(len(available_moves)):
 
         # Create a copy of the grid
-        state = deepcopy(grid)
+        # state = deepcopy(grid)
+        state = [row[:] for row in grid]
 
         # Mark the grid
         state[available_moves[i][0]][available_moves[i][1]] = player - 6
@@ -360,7 +361,8 @@ def min_value(grid, grid_size, player, alpha, beta):
     for i in xrange(len(available_moves)):
 
         # Create a copy of the grid
-        state = deepcopy(grid)
+        # state = deepcopy(grid)
+        state = [row[:] for row in grid]
 
         # Mark the grid
         state[available_moves[i][0]][available_moves[i][1]] = player - 6
