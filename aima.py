@@ -15,7 +15,7 @@ AI = 8
 
 
 def read_file():
-    f1 = open("input5.txt", "r")
+    f1 = open("input1.txt", "r")
     grid_size = int(f1.readline())
     grid = [[-1 for x in xrange(grid_size)] for y in xrange(grid_size)]
 
