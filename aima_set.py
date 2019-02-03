@@ -2,7 +2,7 @@ import collections
 
 # ----------------Variables-------------------
 # To enable debug level prints
-debug = True
+debug = False
 
 # To represent empty state
 EMPTY = 0
@@ -24,7 +24,7 @@ P1 = 7
 AI = 8
 
 # Files
-input_file = "input1.txt"
+input_file = "input100.txt"
 output_file = "output.txt"
 
 # List of available moves sorted based on the value
@@ -233,7 +233,8 @@ def get_affected_cells(grid, grid_size, x, y):
     dprint("affected moves: " + str(available_moves_dict))
     return affected_cells
 
-# Calculates both player's scores and retuns 2 values
+
+# Calculates both player's scores and returns 2 values
 def calculate_score(grid, grid_size):
     p1_score = 0
     p2_score = 0
@@ -311,8 +312,8 @@ def max_value(grid, grid_size, player):
         p1_score, p2_score = calculate_score(grid, grid_size)
         if p1_score > p2_score:
             return [10, -1, -1, -1, -1]
-        # elif p1_score == p2_score:
-        #     return [0, -1, -1, -1, -1]
+        elif p1_score == p2_score:
+            return [0, -1, -1, -1, -1]
         else:
             return [-10, -1, -1, -1, -1]
 
@@ -343,7 +344,7 @@ def max_value(grid, grid_size, player):
         print_grid(state, grid_size)
         dprint("=======")
 
-        # Call min function on this stae
+        # Call min function on this state
         new_score = min_value(state, grid_size, next_player)
 
         # Undo move by marking the affected cells live
@@ -356,7 +357,7 @@ def max_value(grid, grid_size, player):
             # Update the score
             score[0] = new_score[0]
 
-            # P1's move marked at indicies 1 and 2
+            # P1's move marked at indices 1 and 2
             score[1] = move[0]
             score[2] = move[1]
 
@@ -384,8 +385,8 @@ def min_value(grid, grid_size, player):
         p1_score, p2_score = calculate_score(grid, grid_size)
         if p1_score > p2_score:
             return [10, -1, -1, -1, -1]
-        # elif p1_score == p2_score:
-        #     return [0, -1, -1, -1, -1]
+        elif p1_score == p2_score:
+            return [0, -1, -1, -1, -1]
         else:
             return [-10, -1, -1, -1, -1]
 
@@ -426,7 +427,7 @@ def min_value(grid, grid_size, player):
             score[1] = new_score[1]
             score[2] = new_score[2]
 
-            # P2's move marked at indicies 3 and 4
+            # P2's move marked at indices 3 and 4
             score[3] = move[0]
             score[4] = move[1]
 
