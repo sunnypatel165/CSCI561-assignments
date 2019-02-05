@@ -1,7 +1,7 @@
 from enum import Enum
 from copy import copy, deepcopy
 
-debug = True
+debug = False
 # class State(Enum):
 EMPTY = 0
 P1_LASER = 1
@@ -141,7 +141,6 @@ else:
     def dprint(line):
         return
 
-
 def get_empty_slots(grid, grid_size, player):
     # dprint("getting empty slots on ")
     # print_grid(grid, grid_size)
@@ -187,8 +186,8 @@ def max_value(grid, grid_size, player, alpha, beta):
         state[available_moves[i][0]][available_moves[i][1]] = player - 6
         mark_player(state, grid_size, available_moves[i][0], available_moves[i][1], player - 6)
         # dprint("=======")
-        # dprint("played move " + str(available_moves[i][0]) + " " + str(available_moves[i][1]))
-        # print_grid(state, grid_size)
+        dprint("played move " + str(available_moves[i][0]) + " " + str(available_moves[i][1]))
+        print_grid(state, grid_size)
         # dprint("=======")
 
         new_score = min_value(state, grid_size, next_player, alpha, beta)
@@ -230,8 +229,8 @@ def min_value(grid, grid_size, player, alpha, beta):
         state[available_moves[i][0]][available_moves[i][1]] = player - 6
         mark_player(state, grid_size, available_moves[i][0], available_moves[i][1], player - 6)
         # dprint("=======")
-        # dprint("played move " + str(available_moves[i][0]) + " " + str(available_moves[i][1]))
-        # print_grid(state, grid_size)
+        dprint("played move " + str(available_moves[i][0]) + " " + str(available_moves[i][1]))
+        print_grid(state, grid_size)
         # dprint("=======")
         new_score = max_value(state, grid_size, next_player, alpha, beta)
 

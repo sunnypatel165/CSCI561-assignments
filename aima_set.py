@@ -1,4 +1,5 @@
 import collections
+import time
 
 # ----------------Variables-------------------
 # To enable debug level prints
@@ -24,11 +25,14 @@ P1 = 7
 AI = 8
 
 # Files
-input_file = "input100.txt"
+input_file = "input.txt"
 output_file = "output.txt"
 
 # List of available moves sorted based on the value
 available_moves_dict = {}
+
+# Start time to terminate if close to 1 minute
+start_time = 1
 
 
 # ----------------Utilities-------------------
@@ -46,33 +50,11 @@ def read_file():
     return grid, grid_size
 
 
-# Method to print the grid
-def print_grid(grid, grid_size):
-    if not debug:
-        return
-    s = ""
-    for i in xrange(grid_size):
-        for j in xrange(grid_size):
-            s = s + str(grid[i][j]) + " "
-        s += '\n'
-    print s
-
-
 # Returns true if this is a valid position in the grid
 def is_valid_position(grid, grid_size, x , y ):
     if x < 0 or x >= grid_size or y < 0 or y >= grid_size:
         return False
     return True
-
-
-# Debug level print
-if debug:
-    def dprint(line):
-        if debug:
-            print line
-else:
-    def dprint(line):
-        return
 
 
 # ----------------Game functions-------------------
@@ -105,7 +87,6 @@ def get_next_player(player):
 
 # Marks a given players region
 def mark_player(grid, grid_size, x, y, player):
-    dprint("Marking player moves: " + str(player))
 
     for i in xrange(1, 4):
         if not change_color(grid, grid_size, x - i, y, player):
@@ -229,8 +210,6 @@ def get_affected_cells(grid, grid_size, x, y):
             affected_cells.append((x + i, y + i))
             available_moves_dict[(x + i, y + i)] = -1
 
-    dprint("affected rows detected: " + str(affected_cells))
-    dprint("affected moves: " + str(available_moves_dict))
     return affected_cells
 
 
@@ -260,8 +239,6 @@ def mark_live(affected_cells):
 
 # Returns empty slots with live flag
 def get_empty_slots_with_live(grid, grid_size, player):
-    dprint("getting EMPTY slots on ")
-    print_grid(grid, grid_size)
     available_moves = {}
     global available_moves_dict
     # Collect all the moves
@@ -271,7 +248,6 @@ def get_empty_slots_with_live(grid, grid_size, player):
                 available_moves[(i, j)] = 1
     available_moves_sorted = sorted(available_moves.items(), key=lambda move: check_move_value(grid, grid_size, move[0][0], move[0][1], player), reverse=True)
     available_moves_dict = collections.OrderedDict(available_moves_sorted)
-    dprint("sorted moves with live" + str(available_moves_dict))
 
 
 # Returns a list of all live spots
@@ -301,8 +277,6 @@ def check_move_value(grid, grid_size, x, y, player):
 
 # Max value function which is the maximising player - P1
 def max_value(grid, grid_size, player):
-    dprint("inside max " + str(player))
-    print_grid(grid, grid_size)
 
     # Get the next player
     next_player = get_next_player(player)
@@ -326,7 +300,6 @@ def max_value(grid, grid_size, player):
     # For every possible move
     for move in available_moves:
 
-        dprint("move" + str(move))
         # Create a copy of the grid
         # state = deepcopy(grid)
         state = [row[:] for row in grid]
@@ -338,19 +311,11 @@ def max_value(grid, grid_size, player):
         state[move[0]][move[1]] = player - 6
         mark_player(state, grid_size, move[0], move[1], player - 6)
 
-        # Print
-        dprint("=======")
-        dprint("played move " + str(move[0]) + " " + str(move[1]))
-        print_grid(state, grid_size)
-        dprint("=======")
-
         # Call min function on this state
         new_score = min_value(state, grid_size, next_player)
 
         # Undo move by marking the affected cells live
         mark_live(affected_cells)
-
-        dprint("score inside max " + str(new_score) + " " + str(score))
 
         # Update the score - take a max
         if new_score[0] > score[0]:
@@ -374,8 +339,6 @@ def max_value(grid, grid_size, player):
 
 # Min value function which is the minimizing player - AI
 def min_value(grid, grid_size, player):
-    print_grid(grid, grid_size)
-    dprint("inside min " + str(player))
 
     # Get the next player
     next_player = get_next_player(player)
@@ -410,15 +373,9 @@ def min_value(grid, grid_size, player):
         state[move[0]][move[1]] = player - 6
         mark_player(state, grid_size, move[0], move[1], player - 6)
 
-        dprint("=======")
-        dprint("played move " + str(move[0]) + " " + str(move[1]))
-        print_grid(state, grid_size)
-        dprint("=======")
-
         # Update the score - take a min
         new_score = max_value(state, grid_size, next_player)
 
-        dprint("score inside min " + str(new_score) + " " + str(score))
         if new_score[0] < score[0]:
             # Update the score
             score[0] = new_score[0]
@@ -443,7 +400,6 @@ def min_value(grid, grid_size, player):
 
 def minimax(grid, grid_size, player):
     get_empty_slots_with_live(grid, grid_size, player)
-    dprint("live map")
     return max_value(grid, grid_size, P1)
 
 
@@ -454,10 +410,6 @@ def main():
 
     # Apply moves and mark regions
     apply_moves(grid, grid_size)
-
-    print_grid(grid, grid_size)
-    dprint(calculate_score(grid, grid_size))
-    print_grid(grid, grid_size)
 
     # Call minimax
     score = minimax(grid, grid_size, 7)
@@ -474,7 +426,7 @@ def main():
     else:
         print str(x) + " " + str(y)
 
-
 # Call main
 if __name__ == '__main__':
+    start = time.time()
     main()
