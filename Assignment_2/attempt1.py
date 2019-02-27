@@ -1,20 +1,40 @@
-class Flight:
-  def __init__(self, max_air_time, landing_time, minimum_service_time, takeoff_time, max_service_time):
-    self.max_air_time = max_air_time
-    self.landing_time = landing_time
-    self.minimum_service_time = minimum_service_time
-    self.takeoff_time = takeoff_time
-    self.max_service_time = max_service_time
+debug = True
 
-  def print_flight(self):
-    print(str(self.max_air_time) + " " +
-          str(self.landing_time) + " " +
-          str(self.minimum_service_time) + " " +
-          str(self.takeoff_time) + " " +
-          str(self.max_service_time) + " ")
+
+class Flight:
+
+    def __init__(self, max_air_time, landing_time, minimum_service_time, takeoff_time, max_service_time):
+        self.dom_air_time = []
+        self.dom_service_time = []
+        self.max_air_time = max_air_time
+        self.landing_time = landing_time
+        self.minimum_service_time = minimum_service_time
+        self.takeoff_time = takeoff_time
+        self.maximum_service_time = max_service_time
+        self.update_dom_air_time()
+        self.update_dom_service_time()
+
+    def print_flight(self):
+        print(str(self.max_air_time) + " " +
+              str(self.landing_time) + " " +
+              str(self.minimum_service_time) + " " +
+              str(self.takeoff_time) + " " +
+              str(self.maximum_service_time) + " " +
+              str(self.dom_air_time) + " " +
+              str(self.dom_service_time))
+
+    def update_dom_air_time(self):
+        for i in range(0, self.max_air_time+1, 1):
+            self.dom_air_time.append(i)
+
+    def update_dom_service_time(self):
+        for i in range(self.minimum_service_time, self.maximum_service_time+1, 1):
+            self.dom_service_time.append(i)
 
 
 def print_flights(flights):
+    if not debug:
+        return
     for i in flights:
         i.print_flight()
 
@@ -30,6 +50,7 @@ def read_file():
         flight = Flight(int(line[0]), int(line[1]), int(line[2]), int(line[3]), int(line[4]))
         flights.append(flight)
     print_flights(flights)
+    return landing, gates, takingoff, flights
 
 
 def main():
