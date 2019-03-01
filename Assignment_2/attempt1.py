@@ -1,11 +1,14 @@
 debug = True
+minutes = 200
 
 
 class Flight:
 
-    def __init__(self, max_air_time, landing_time, minimum_service_time, takeoff_time, max_service_time):
+    def __init__(self, id, max_air_time, landing_time, minimum_service_time, takeoff_time, max_service_time):
+        self.id = "P" + str(id)
         self.dom_air_time = []
         self.dom_service_time = []
+        self.assignment = []
         self.max_air_time = max_air_time
         self.landing_time = landing_time
         self.minimum_service_time = minimum_service_time
@@ -15,13 +18,15 @@ class Flight:
         self.update_dom_service_time()
 
     def print_flight(self):
-        print(str(self.max_air_time) + " " +
+        print(self.id + " " +
+              str(self.max_air_time) + " " +
               str(self.landing_time) + " " +
               str(self.minimum_service_time) + " " +
               str(self.takeoff_time) + " " +
               str(self.maximum_service_time) + " " +
               str(self.dom_air_time) + " " +
-              str(self.dom_service_time))
+              str(self.dom_service_time) + " " +
+              str(self.assignment))
 
     def update_dom_air_time(self):
         for i in range(0, self.max_air_time + 1, 1):
@@ -39,6 +44,15 @@ def print_flights(flights):
         i.print_flight()
 
 
+if debug == True:
+    def dprint(line):
+        if debug == True:
+            print line
+else:
+    def dprint(line):
+        return
+
+
 def read_file():
     f1 = open("input0.txt", "r")
     line = f1.readline().strip().split()
@@ -47,7 +61,7 @@ def read_file():
     flights = []
     for i in xrange(n):
         line = f1.readline().strip().split()
-        flight = Flight(int(line[0]), int(line[1]), int(line[2]), int(line[3]), int(line[4]))
+        flight = Flight(i, int(line[0]), int(line[1]), int(line[2]), int(line[3]), int(line[4]))
         flights.append(flight)
     print_flights(flights)
     return landing, gates, takingoff, flights
@@ -62,9 +76,9 @@ def initialise_time(landing, gates, takeoff):
     global landing_runways_available
     global gates_available
     global takeoff_runways_available
-    landing_runways_available = [landing] * 1000
-    gates_available = [gates] * 1000
-    takeoff_runways_available = [takeoff] * 1000
+    landing_runways_available = [landing] * minutes
+    gates_available = [gates] * minutes
+    takeoff_runways_available = [takeoff] * minutes
 
     # return landing_runway, gates, takeoff_runway
 
@@ -108,30 +122,61 @@ def mark_takeoff_runways_busy(start, end):
 
 
 def schedule_single_flight_backtrack(flight):
-    schedule_landing(flight)
+    return schedule_landing(flight)
 
 
 def schedule_landing(flight):
-    # For every possible domain of air time
+    # For every possible value in the  domain of air time
     for dom in flight.dom_air_time:
         # Check if runway is available for the entire time needed
+        dprint(flight.id + " Trying landing time: " + str(dom) + "  " + str(dom + flight.landing_time))
         if check_landing_runway_available(dom, dom + flight.landing_time):
             chosen_landing_start = dom
             chosen_landing_end = dom + flight.landing_time
-            if schedule_service(flight, chosen_landing_end):
-                return [True, chosen_landing_start]
+            service_possibility = schedule_service(flight, chosen_landing_end)
+
+            if service_possibility[0] and service_possibility[1] != -1:
+                mark_landing_runway_busy(dom, dom + flight.landing_time)
+                answer = [True, chosen_landing_start, service_possibility[1]]
+                flight.assignment = answer
+                return answer
+    return [False, -1]
 
 
 def schedule_service(flight, chosen_landing_end_time):
     # For every possible domain of service time
     for dom in flight.dom_service_time:
+
+        dprint(
+            flight.id + " Trying gate time: " + str(chosen_landing_end_time) + "  " + str(
+                chosen_landing_end_time + dom))
+
         if check_gates_available(chosen_landing_end_time, chosen_landing_end_time + dom):
-            if schedule_takeoff(flight, chosen_landing_end_time + dom):
-                return True
+            chosen_service_end_time = chosen_landing_end_time + dom
+            takeoff_possibility = schedule_takeoff(flight, chosen_service_end_time)
+
+            if takeoff_possibility[0] and takeoff_possibility[1] != -1:
+                mark_gates_busy(chosen_landing_end_time, chosen_landing_end_time + dom)
+                return [True, chosen_service_end_time]
+
+    return [False, -1]
+
+
+def print_state():
+    dprint("Landing: " + str(landing_runways_available))
+    dprint("Gates  : " + str(gates_available))
+    dprint("Takeoff: " + str(takeoff_runways_available))
 
 
 def schedule_takeoff(flight, chosen_service_end_time):
-    return check_takeoff_runways_available(chosen_service_end_time, chosen_service_end_time + flight.takeoff_time)
+    dprint(flight.id + " Trying takeoff time: " + str(chosen_service_end_time) + "  " + str(
+        chosen_service_end_time + flight.takeoff_time))
+    if check_takeoff_runways_available(chosen_service_end_time, chosen_service_end_time + flight.takeoff_time):
+        chosen_takeoff_start_time = chosen_service_end_time
+
+        mark_takeoff_runways_busy(chosen_takeoff_start_time, chosen_service_end_time + flight.takeoff_time)
+        return [True, chosen_takeoff_start_time]
+    return [False, -1]
 
 
 # Schedule a flight
@@ -189,10 +234,12 @@ def schedule(flights):
 
 
 def main():
-    flight = Flight(0, 10, 50, 20, 70)
-    flight.print_flight()
     landing, gates, takingoff, flights = read_file()
     initialise_time(landing, gates, takingoff)
+    print schedule_single_flight_backtrack(flights[0])
+    print_state()
+    print schedule_single_flight_backtrack(flights[1])
+    print_state()
 
 
 if __name__ == '__main__':
