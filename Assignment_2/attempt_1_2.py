@@ -1,7 +1,7 @@
 from copy import deepcopy
 
-debug = True
-minutes = 200
+debug = False
+minutes = 1000
 
 
 class Flight:
@@ -30,6 +30,12 @@ class Flight:
               str(self.dom_service_time) + " " +
               str(self.assignment))
 
+    def print_assignment(self):
+        print(self.id +
+              " assigned " + str(self.assignment[0]) +
+              " Lands " + str(self.assignment[1]) +
+              " Takes off " + str(self.assignment[2]))
+
     def update_dom_air_time(self):
         for i in range(0, self.max_air_time + 1, 1):
             self.dom_air_time.append(i)
@@ -44,6 +50,13 @@ def print_flights(flights):
         return
     for i in flights:
         i.print_flight()
+
+
+def print_flights_assignments(flights):
+    if not debug:
+        return
+    for i in flights:
+        i.print_assignment()
 
 
 if debug == True:
@@ -109,17 +122,17 @@ def check_takeoff_runways_available(start, end):
 
 # mark busy
 def mark_landing_runway_busy(start, end):
-    for i in range(start, end + 1, 1):
+    for i in range(start, end, 1):
         landing_runways_available[i] = landing_runways_available[i] - 1
 
 
 def mark_gates_busy(start, end):
-    for i in range(start, end + 1, 1):
+    for i in range(start, end, 1):
         gates_available[i] = gates_available[i] - 1
 
 
 def mark_takeoff_runways_busy(start, end):
-    for i in range(start, end + 1, 1):
+    for i in range(start, end, 1):
         takeoff_runways_available[i] = takeoff_runways_available[i] - 1
 
 
@@ -140,9 +153,11 @@ def schedule_landing(flight):
             if service_possibility[0] and service_possibility[1] != -1:
                 mark_landing_runway_busy(dom, dom + flight.landing_time)
                 answer = [True, chosen_landing_start, service_possibility[1]]
-                flight.assignment = answer
+                flight.assignment = [True, chosen_landing_start, service_possibility[1]]
                 return answer
-    return [False, -1]
+    answer = deepcopy([False, -1])
+    flight.assignment = [False, -1]
+    return answer
 
 
 def schedule_service(flight, chosen_landing_end_time):
@@ -182,25 +197,34 @@ def schedule_takeoff(flight, chosen_service_end_time):
 
 
 def schedule(flights):
+    global flights_for_assignment
     dprint("Trying to schedule " + str(flights))
     dprint("=============")
     print_state()
     unscheduled = deepcopy(flights)
     for flight in unscheduled:
         schedule_found = schedule_single_flight_backtrack(flight)
+
+        for original in flights_for_assignment:
+            if original.id == flight.id:
+                dprint("assigining original" + flight.id + str(schedule_found))
+                original.assignment = deepcopy(schedule_found)
+
         if schedule_found[0]:
             unscheduled.remove(flight)
             if len(unscheduled) == 0:
-                print "YES"
+                dprint("YES")
                 return True
             if not schedule(unscheduled):
                 dprint("unscheduling=====")
-
                 unschedule_flight(flight)
                 unscheduled.insert(0, flight)
-        if not schedule_found[0]:
-            print "NO"
-            return False
+            else:
+                return True
+        # if not schedule_found[0]:
+        #     print "NO"
+        #     return False
+    return True
 
 
 def unschedule_flight(flight):
@@ -211,17 +235,26 @@ def unschedule_flight(flight):
 
     if flight.assignment[0]:
         chosen_landing_start_time = flight.assignment[1]
-        for i in range(chosen_landing_start_time, chosen_landing_start_time + flight.landing_time + 1):
+        for i in range(chosen_landing_start_time, chosen_landing_start_time + flight.landing_time):
             landing_runways_available[i] = landing_runways_available[i] + 1
 
         chosen_service_end_time = flight.assignment[2]
-        for i in range(chosen_landing_start_time + flight.landing_time, chosen_service_end_time + 1):
+        for i in range(chosen_landing_start_time + flight.landing_time, chosen_service_end_time):
             gates_available[i] = gates_available[i] + 1
 
-        for i in range(chosen_service_end_time, chosen_service_end_time + flight.takeoff_time + 1):
+        for i in range(chosen_service_end_time, chosen_service_end_time + flight.takeoff_time):
             takeoff_runways_available[i] = takeoff_runways_available[i] + 1
+    flight.assignment = [False, -1]
+
+    for og in flights_for_assignment:
+        if og.id == flight.id:
+            dprint("assigining original")
+            og.assignment = deepcopy([False, -1])
     print_state()
     dprint("==========")
+
+
+flights_for_assignment = []
 
 
 def main():
@@ -232,7 +265,21 @@ def main():
     # print schedule_single_flight_backtrack(flights[1])
     # print_state()
     #
-    schedule(flights)
+    global flights_for_assignment
+    flights_for_assignment = deepcopy(flights)
+    dprint(schedule(flights))
+    print_flights(flights)
+    print_flights_assignments(flights_for_assignment)
+
+    if debug == False:
+        f2 = open("output.txt", "w")
+        str2 = ""
+        for flight in flights_for_assignment:
+            str2 += str(flight.assignment[1]) + " " + str(flight.assignment[2]) + "\n"
+        f2.write(str2)
+    else:
+        for flight in flights_for_assignment:
+            print str(flight.assignment[1]) + " " + str(flight.assignment[2])
 
 
 if __name__ == '__main__':
