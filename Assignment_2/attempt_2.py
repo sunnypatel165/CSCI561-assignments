@@ -1,6 +1,7 @@
+import itertools
 from copy import deepcopy
 
-debug = True
+debug = False
 minutes = 300
 
 
@@ -44,12 +45,20 @@ class Flight:
         for i in range(self.minimum_service_time, self.maximum_service_time + 1, 1):
             self.dom_service_time.append(i)
 
+    def reset_flight(self):
+        self.assignment = []
+
 
 def print_flights(flights):
     if not debug:
         return
     for i in flights:
         i.print_flight()
+
+
+def reset_flights(flights):
+    for i in flights:
+        i.reset_flight()
 
 
 def print_flights_assignments(flights):
@@ -69,7 +78,7 @@ else:
 
 
 def read_file():
-    f1 = open("input0.txt", "r")
+    f1 = open("input3.txt", "r")
     line = f1.readline().strip().split()
     landing, gates, takingoff = int(line[0]), int(line[1]), int(line[2])
     n = int(f1.readline())
@@ -164,7 +173,7 @@ def schedule_service(flight, chosen_landing_end_time):
     # For every possible domain of service time
     for dom in flight.dom_service_time:
 
-        #dprint(flight.id + " Trying gate time: " + str(chosen_landing_end_time) + "  " + str(chosen_landing_end_time + dom))
+        # dprint(flight.id + " Trying gate time: " + str(chosen_landing_end_time) + "  " + str(chosen_landing_end_time + dom))
 
         if check_gates_available(chosen_landing_end_time, chosen_landing_end_time + dom):
             chosen_service_end_time = chosen_landing_end_time + dom
@@ -194,37 +203,65 @@ def schedule_takeoff(flight, chosen_service_end_time):
     return [False, -1]
 
 
-def schedule(unscheduled):
+def schedule(landing, gates, takingoff, flights):
     global flights_for_assignment
     # dprint("Trying to schedule " + str(flights))
     dprint("=============")
     print_state()
+    for sch in itertools.permutations(flights):
+        all_possible = True
+        for flight in sch:
+            schedule_found = schedule_single_flight_backtrack(flight)
+            if not schedule_found[0]:
+                all_possible = False
+                reset_flights(flights)
+                initialise_time(landing, gates, takingoff)
+                break
+            else:
+                for original in flights_for_assignment:
+                    if original.id == flight.id:
+                        dprint("assigining original" + flight.id + str(schedule_found))
+                        original.assignment = deepcopy(schedule_found)
+
+        if all_possible:
+            print_flights_assignments(flights)
+            if debug == False:
+                f2 = open("output.txt", "w")
+                str2 = ""
+                for flight in flights_for_assignment:
+                    str2 += str(flight.assignment[1]) + " " + str(flight.assignment[2]) + "\n"
+                f2.write(str2)
+            else:
+                for flight in flights_for_assignment:
+                    print str(flight.assignment[1]) + " " + str(flight.assignment[2])
+
+            break
     # unscheduled = deepcopy(flights)
-    for flight in unscheduled:
-        # For every unscheduled flight, try to find a schedule
-        schedule_found = schedule_single_flight_backtrack(flight)
-
-        for original in flights_for_assignment:
-            if original.id == flight.id:
-                dprint("assigining original" + flight.id + str(schedule_found))
-                original.assignment = deepcopy(schedule_found)
-
-        if schedule_found[0]:
-            unscheduled.remove(flight)
-            if len(unscheduled) == 0:
-                dprint("YES")
-                return True
-            if not schedule(unscheduled):
-                dprint("unscheduling=====")
-                unschedule_flight(flight)
-                unscheduled.append(flight) #inserting at 0 will lead to infinite
-                # schedule(unscheduled)
-                # return False
-
-        if not schedule_found[0]:
-            dprint("NO")
-            return False
-    dprint("returning")
+    # for flight in unscheduled:
+    #     # For every unscheduled flight, try to find a schedule
+    #     schedule_found = schedule_single_flight_backtrack(flight)
+    #
+    #     for original in flights_for_assignment:
+    #         if original.id == flight.id:
+    #             dprint("assigining original" + flight.id + str(schedule_found))
+    #             original.assignment = deepcopy(schedule_found)
+    #
+    #     if schedule_found[0]:
+    #         unscheduled.remove(flight)
+    #         if len(unscheduled) == 0:
+    #             dprint("YES")
+    #             return True
+    #         if not schedule(unscheduled):
+    #             dprint("unscheduling=====")
+    #             unschedule_flight(flight)
+    #             unscheduled.append(flight) #inserting at 0 will lead to infinite
+    #             # schedule(unscheduled)
+    #             # return False
+    #
+    #     if not schedule_found[0]:
+    #         dprint("NO")
+    #         return False
+    # dprint("returning")
     return True
 
 
@@ -268,19 +305,19 @@ def main():
     #
     global flights_for_assignment
     flights_for_assignment = deepcopy(flights)
-    dprint(schedule(flights))
+    dprint(schedule(landing, gates, takingoff, flights))
     print_flights(flights)
-    print_flights_assignments(flights_for_assignment)
+    # print_flights_assignments(flights_for_assignment)
 
-    if debug == False:
-        f2 = open("output.txt", "w")
-        str2 = ""
-        for flight in flights_for_assignment:
-            str2 += str(flight.assignment[1]) + " " + str(flight.assignment[2]) + "\n"
-        f2.write(str2)
-    else:
-        for flight in flights_for_assignment:
-            print str(flight.assignment[1]) + " " + str(flight.assignment[2])
+    # if debug == False:
+    #     f2 = open("output.txt", "w")
+    #     str2 = ""
+    #     for flight in flights_for_assignment:
+    #         str2 += str(flight.assignment[1]) + " " + str(flight.assignment[2]) + "\n"
+    #     f2.write(str2)
+    # else:
+    #     for flight in flights_for_assignment:
+    #         print str(flight.assignment[1]) + " " + str(flight.assignment[2])
 
 
 if __name__ == '__main__':
