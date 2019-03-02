@@ -12,6 +12,8 @@ class Flight:
         self.dom_air_time = []
         self.dom_service_time = []
         self.assignment = []
+        self.new_land_domain = []
+        self.new_takeoff_domain = []
         self.max_air_time = max_air_time
         self.landing_time = landing_time
         self.minimum_service_time = minimum_service_time
@@ -149,24 +151,48 @@ def schedule_single_flight_backtrack(flight):
     return schedule_landing(flight)
 
 
+def find_eligible_takeoff_times(flight, selected_landing):
+    eligible = []
+    for dom in flight.new_takeoff_domain:
+        if selected_landing + flight.landing_time + flight.minimum_service_time <= dom <= selected_landing + flight.landing_time + flight.maximum_service_time:
+            eligible.append(dom)
+    return eligible
+
+
 def schedule_landing(flight):
     # For every possible value in the  domain of air time
-    for dom in flight.dom_air_time:
-        # Check if runway is available for the entire time needed
-        dprint(flight.id + " Trying landing time: " + str(dom) + "  " + str(dom + flight.landing_time))
+    for dom in flight.new_land_domain:
+        dprint(flight.id + " Checking runway: " + str(dom) + " " + str(dom + flight.landing_time))
         if check_landing_runway_available(dom, dom + flight.landing_time):
-            chosen_landing_start = dom
-            chosen_landing_end = dom + flight.landing_time
-            service_possibility = schedule_service(flight, chosen_landing_end)
+            eligible = find_eligible_takeoff_times(flight, dom)
+            dprint("Eligible landing times: " + str(eligible))
+            if len(eligible) > 0:
+                for e in eligible:
+                    dprint(flight.id + " Checking gates: " + str(dom + flight.landing_time) + " " + str(e))
+                    dprint(flight.id + " Checking takeo: " + str(e) + " " + str(e + flight.takeoff_time))
+                    if check_gates_available(dom + flight.landing_time, e) and check_takeoff_runways_available(e,
+                                                                                                               e + flight.takeoff_time):
+                        mark_landing_runway_busy(dom, dom + flight.landing_time)
+                        mark_gates_busy(dom + flight.landing_time, e)
+                        mark_takeoff_runways_busy(e, e + flight.takeoff_time)
+                        flight.assignment = [True, dom, e]
+                        return [True, dom, e]
+    return [False, -1]
 
-            if service_possibility[0] and service_possibility[1] != -1:
-                mark_landing_runway_busy(dom, dom + flight.landing_time)
-                answer = [True, chosen_landing_start, service_possibility[1]]
-                flight.assignment = [True, chosen_landing_start, service_possibility[1]]
-                return answer
-    answer = deepcopy([False, -1])
-    flight.assignment = [False, -1]
-    return answer
+    #     dprint(flight.id + " Trying landing time: " + str(dom) + "  " + str(dom + flight.landing_time))
+    #     if check_landing_runway_available(dom, dom + flight.landing_time):
+    #         chosen_landing_start = dom
+    #         chosen_landing_end = dom + flight.landing_time
+    #         service_possibility = schedule_service(flight, chosen_landing_end)
+    #
+    #         if service_possibility[0] and service_possibility[1] != -1:
+    #             mark_landing_runway_busy(dom, dom + flight.landing_time)
+    #             answer = [True, chosen_landing_start, service_possibility[1]]
+    #             flight.assignment = [True, chosen_landing_start, service_possibility[1]]
+    #             return answer
+    # answer = deepcopy([False, -1])
+    # flight.assignment = [False, -1]
+    # return answer
 
 
 def schedule_service(flight, chosen_landing_end_time):
@@ -304,7 +330,17 @@ def main():
     # print_state()
     #
     global flights_for_assignment
+    flights[0].new_land_domain = [0]
+    flights[1].new_land_domain = [0, 10, 20]
+    flights[2].new_land_domain = [0, 10, 20, 30, 40, 50, 60]
+    flights[3].new_land_domain = [0, 10, 20, 30, 40, 50, 60, 70, 80]
+
+    flights[0].new_takeoff_domain = [60, 70, 80]
+    flights[1].new_takeoff_domain = [60, 70, 80, 90, 100]
+    flights[2].new_takeoff_domain = [80, 90, 100, 110, 120, 130, 140]
+    flights[3].new_takeoff_domain = [40, 80, 90, 100, 110, 120, 130, 140, 150, 160, 165, 170]
     flights_for_assignment = deepcopy(flights)
+
     dprint(schedule(landing, gates, takingoff, flights))
     print_flights(flights)
     # print_flights_assignments(flights_for_assignment)
