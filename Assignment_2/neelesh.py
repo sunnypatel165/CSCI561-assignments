@@ -1,107 +1,3 @@
-from multiprocessing import Queue
-from collections import OrderedDict
-L = 1
-G = 2
-T = 1
-
-
-class Plane:
-
-    def _init_(self, r, m, s, o, c):
-        self.r = r
-        self.m = m
-        self.s = s
-        self.o = o
-        self.c = c
-        self.l_set = set()
-        self.t_set = set()
-
-    def _eq_(self, other):
-        return self.r == other.r and self.m == other.m and self.s == other.s and self.o == other.o and self.c == other.c
-
-    def _hash_(self):
-        return hash((self.r, self.m, self.s, self.o, self.c))
-
-
-p1 = Plane(0, 10, 50, 20, 70)
-p2 = Plane(20, 20, 40, 20, 60)
-p3 = Plane(60, 10, 70, 20, 75)
-p4 = Plane(80, 10, 30, 30, 80)
-p_list = [p1, p2, p3, p4]
-
-
-def update_plane_l_domains():
-    for plane in p_list:
-        plane.l_set.add(0)
-        plane.l_set.add(plane.r)
-
-    landing_queue = Queue()
-
-    landing_queue.put(p1)
-    while landing_queue.qsize() > 0:
-        plane = landing_queue.get()
-        l_set = plane.l_set
-        for l in l_set:
-            for plane_in in p_list:
-                if plane == plane_in:
-                    continue
-                else:
-                    if l + plane.m >= max(plane_in.l_set) or l + plane.m <= min(plane_in.l_set):
-                        continue
-                    else:
-                        if l + plane.m in plane_in.l_set:
-                            continue
-                        else:
-                            plane_in.l_set.add(l + plane.m)
-                            landing_queue.put(plane_in)
-
-
-def update_plane_t_domains():
-
-    for plane in p_list:
-        plane.t_set.add(plane.m + plane.s)
-        plane.t_set.add(plane.r + plane.m + plane.c)
-
-    take_off_queue = Queue()
-
-    take_off_queue.put(p1)
-    while take_off_queue.qsize() > 0:
-        plane = take_off_queue.get()
-        t_set = plane.t_set
-        for t in t_set:
-            for plane_in in p_list:
-                if plane == plane_in:
-                    continue
-                else:
-                    if t + plane.o >= max(plane_in.t_set) or t + plane.o <= min(plane_in.t_set):
-                        continue
-                    else:
-                        if t + plane.o in plane_in.t_set:
-                            continue
-                        else:
-                            plane_in.t_set.add(t + plane.o)
-                            take_off_queue.put(plane_in)
-
-
-def update_t_to_l():
-    take_off_to_landing_queue = Queue()
-    take_off_to_landing_queue.put(p1)
-    while take_off_to_landing_queue.qsize() > 0:
-        plane = take_off_to_landing_queue.get()
-        t_set = plane.t_set
-        is_updated = False
-        for t in t_set:
-            max_val = t - plane.c - plane.m
-            min_val = t - plane.s - plane.m
-            if min_val > 0 and min_val < max(plane.l_set):
-                if min_val not in plane.l_set:
-                    plane.l_set.add(min_val)
-                    is_updated = True
-            if max_val > 0 and max_val < max(plane.l_set):
-                if max_val not in plane.l_set:
-                    plane.l_set.add(max_val)
-          …
-Ok trying
 P1=Plane(30,54,33,56,153)
 P2=Plane(103,33,23,13,143)
 P3=Plane(100,13,8,21,128)
@@ -403,4 +299,7 @@ for plane in p_list:
 update_l_to_t()
 print "update l to t done"
 update_t_to_l()
-print " update t t…
+print " update t to l done"
+time2 = time.time()
+print time2 - time1
+# backtrack_and_assign()

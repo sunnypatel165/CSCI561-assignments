@@ -4,7 +4,7 @@ from multiprocessing import Queue
 
 from copy import deepcopy
 
-debug = True
+debug = False
 minutes = 300
 
 
@@ -285,18 +285,17 @@ def schedule(landing, gates, takingoff, flights):
             break
     return True
 
-
 def update_plane_l_domains():
-    for plane in p_list:
-        plane.l_set.add(0)
-        plane.l_set.add(plane.max_air_time)
+    for p in p_list:
+        p.l_set.add(0)
+        p.l_set.add(p.max_air_time)
 
-    landing_queue = Queue()
+    landing_queue = list()
 
-    landing_queue.put(p_list[0])
-    time.sleep(0.001)
-    while not landing_queue.empty():
-        plane = landing_queue.get()
+    landing_queue.append(p_list[0])
+    while len(landing_queue) > 0:
+        plane = landing_queue[0]
+        del landing_queue[0]
         l_set = plane.l_set
         for l in l_set:
             for plane_in in p_list:
@@ -310,21 +309,23 @@ def update_plane_l_domains():
                             continue
                         else:
                             plane_in.l_set.add(l + plane.landing_time)
-                            landing_queue.put(plane_in)
-                            time.sleep(0.001)
+                            if plane_in not in landing_queue:
+                                landing_queue.append(plane_in)
+
 
 
 def update_plane_t_domains():
+
     for plane in p_list:
         plane.t_set.add(plane.landing_time + plane.minimum_service_time)
-        plane.t_set.add(plane.max_air_time + plane.landing_time + plane.maximum_service_time)
+        plane.t_set.add(plane.landing_time + plane.landing_time + plane.maximum_service_time)
 
-    take_off_queue = Queue()
+    take_off_queue = list()
 
-    take_off_queue.put(p_list[0])
-    time.sleep(0.001)
-    while not take_off_queue.empty():
-        plane = take_off_queue.get()
+    take_off_queue.append(p_list[0])
+    while len(take_off_queue) > 0:
+        plane = take_off_queue[0]
+        del take_off_queue[0]
         t_set = plane.t_set
         for t in t_set:
             for plane_in in p_list:
@@ -338,16 +339,16 @@ def update_plane_t_domains():
                             continue
                         else:
                             plane_in.t_set.add(t + plane.takeoff_time)
-                            take_off_queue.put(plane_in)
-                            time.sleep(0.001)
+                            if plane_in not in take_off_queue:
+                                take_off_queue.append(plane_in)
 
 
 def update_t_to_l():
-    take_off_to_landing_queue = Queue()
-    take_off_to_landing_queue.put(p_list[0])
-    time.sleep(0.001)
-    while not take_off_to_landing_queue.empty():
-        plane = take_off_to_landing_queue.get()
+    take_off_to_landing_queue = list()
+    take_off_to_landing_queue.append(p_list[0])
+    while len(take_off_to_landing_queue) > 0:
+        plane = take_off_to_landing_queue[0]
+        del take_off_to_landing_queue[0]
         t_set = plane.t_set
         is_updated = False
         for t in t_set:
@@ -363,35 +364,34 @@ def update_t_to_l():
                     is_updated = True
 
         if is_updated is True:
-            landing_queue = Queue()
-            landing_queue.put(plane)
-            time.sleep(0.001)
-            while landing_queue.qsize() > 0:
-                plane = landing_queue.get()
+            landing_queue = list()
+            landing_queue.append(plane)
+            while len(landing_queue) > 0:
+                plane = landing_queue[0]
+                del landing_queue[0]
                 l_set = plane.l_set
                 for l in l_set:
                     for plane_in in p_list:
                         if plane == plane_in:
                             continue
                         else:
-                            if l + plane.landing_time >= max(plane_in.l_set) or l + plane.landing_time <= min(
-                                    plane_in.l_set):
+                            if l + plane.landing_time >= max(plane_in.l_set) or l + plane.landing_time <= min(plane_in.l_set):
                                 continue
                             else:
                                 if l + plane.landing_time in plane_in.l_set:
                                     continue
                                 else:
                                     plane_in.l_set.add(l + plane.landing_time)
-                                    landing_queue.put(plane_in)
-                                    time.sleep(0.001)
+                                    if plane_in not in landing_queue:
+                                        landing_queue.append(plane_in)
 
 
 def update_l_to_t():
-    take_off_to_landing_queue = Queue()
-    take_off_to_landing_queue.put(p_list[0])
-    time.sleep(0.001)
-    while not take_off_to_landing_queue.empty():
-        plane = take_off_to_landing_queue.get()
+    take_off_to_landing_queue = list()
+    take_off_to_landing_queue.append(p_list[0])
+    while len(take_off_to_landing_queue) > 0:
+        plane = take_off_to_landing_queue[0]
+        del take_off_to_landing_queue[0]
         l_set = plane.l_set
         is_updated = False
         for l in l_set:
@@ -407,32 +407,31 @@ def update_l_to_t():
                     is_updated = True
 
         if is_updated is True:
-            take_off_queue = Queue()
-            take_off_queue.put(plane)
-            time.sleep(0.001)
-            while take_off_queue.qsize() > 0:
-                plane = take_off_queue.get()
+            take_off_queue = list()
+            take_off_queue.append(plane)
+            while len(take_off_queue) > 0:
+                plane = take_off_queue[0]
+                del take_off_queue[0]
                 t_set = plane.t_set
                 for t in t_set:
                     for plane_in in p_list:
                         if plane == plane_in:
                             continue
                         else:
-                            if t + plane.takeoff_time >= max(plane_in.t_set) or t + plane.takeoff_time <= min(
-                                    plane_in.t_set):
+                            if t + plane.takeoff_time >= max(plane_in.t_set) or t + plane.takeoff_time <= min(plane_in.t_set):
                                 continue
                             else:
                                 if t + plane.takeoff_time in plane_in.t_set:
                                     continue
                                 else:
                                     plane_in.t_set.add(t + plane.takeoff_time)
-                                    take_off_queue.put(plane_in)
-                                    time.sleep(0.001)
+                                    if plane_in not in take_off_queue:
+                                        take_off_queue.append(plane_in)
 
     for plane in p_list:
-        dprint(sorted(plane.l_set))
+        print sorted(plane.l_set)
     for plane in p_list:
-        dprint(sorted(plane.t_set))
+        print sorted(plane.t_set)
 
 
 def unschedule_flight(flight):
