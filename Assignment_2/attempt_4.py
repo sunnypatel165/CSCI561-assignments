@@ -15,7 +15,7 @@ class Flight:
         self.dom_air_time = []
         self.dom_service_time = []
         self.assignment = []
-        self.new_land_domain = []
+        self.new_land_domain =[]
         self.new_takeoff_domain = []
         self.max_air_time = max_air_time
         self.landing_time = landing_time
@@ -36,10 +36,10 @@ class Flight:
                str(self.maximum_service_time) + " " +
                # str(self.dom_air_time) + " " +
                # str(self.dom_service_time) + " " +
-               # str(self.new_land_domain) + " " +
-               # str(self.new_takeoff_domain) + " " +
-               str(self.l_set) + " " +
-               str(self.t_set) + " " +
+               str(self.new_land_domain) + " " +
+               str(self.new_takeoff_domain) + " " +
+               # str(self.l_set) + " " +
+               # str(self.t_set) + " " +
                str(self.assignment))
 
     def print_assignment(self):
@@ -188,7 +188,68 @@ def find_eligible_takeoff_times(flight, selected_landing):
     return eligible
 
 
-def schedule_landing(flight):
+def update_domain_for_flight(flight, t):
+    for dom in flight.new_land_domain:
+        if dom <= t <= dom + flight.landing_time:
+            flight.new_land_domain.remove(dom)
+            # eligible = find_eligible_takeoff_times(flight, dom)
+            # flight.new_takeoff_domain = set(flight.new_takeoff_domain) - set(eligible)
+
+    if len(flight.new_land_domain) == 0:
+        return True
+    return False
+
+
+def update_takeoff_domain_for_flight(flight, t):
+    for dom in flight.new_takeoff_domain:
+        if dom <= t <= dom + flight.takeoff_time:
+            flight.new_takeoff_domain.remove(dom)
+            # eligible = find_eligible_takeoff_times(flight, dom)
+            # flight.new_takeoff_domain = set(flight.new_takeoff_domain) - set(eligible)
+
+    if len(flight.new_land_domain) == 0:
+        return True
+    return False
+
+
+def update_landing_domains_for_other_flights(flights):
+    print("updating domain")
+    for i in range(minutes):
+        if landing_runways_available[i] == 0:
+            for flight in flights:
+                if update_domain_for_flight(flight, i):
+                    return True  # indicates empty
+    return False
+
+
+def update_gate_domain_for_flight(flight, t):
+    for dom in flight.new_land_domain:
+        if dom + flight.landing_time <= t <= dom + flight.landing_time + flight.minimum_service_time:
+            flight.new_land_domain.remove(dom)
+    if len(flight.new_land_domain) == 0:
+        return True
+    return False
+
+
+def update_gate_domains_for_other_flights(flights):
+    for i in range(minutes):
+        if gates_available[i] == 0:
+            for flight in flights:
+                if update_gate_domain_for_flight(flight, i):
+                    return True  # indicates empty
+    return False
+
+def update_takeoff_domains_for_other_flights(flights):
+    print("updating take off domain")
+    for i in range(minutes):
+        if takeoff_runways_available[i] == 0:
+            for flight in flights:
+                if update_takeoff_domain_for_flight(flight, i):
+                    return True  # indicates empty
+    return False
+
+
+def schedule_landing(flight, unscheduled):
     # For every possible value in the  domain of air time
     for dom in flight.new_land_domain:
         # dprint(flight.id + " Checking runway: " + str(dom) + " " + str(dom + flight.landing_time))
@@ -202,26 +263,19 @@ def schedule_landing(flight):
                     if check_gates_available(dom + flight.landing_time, e) and check_takeoff_runways_available(e,
                                                                                                                e + flight.takeoff_time):
                         mark_landing_runway_busy(dom, dom + flight.landing_time)
+                        # if update_landing_domains_for_other_flights(unscheduled):
+                        #     return [False, -1]
+
                         mark_gates_busy(dom + flight.landing_time, e)
+                        # if update_gate_domains_for_other_flights(unscheduled):
+                        #     return [False, -1]
                         mark_takeoff_runways_busy(e, e + flight.takeoff_time)
+                        # if update_takeoff_domains_for_other_flights(unscheduled):
+                        #     return [False, -1]
+
                         flight.assignment = [True, dom, e]
                         return [True, dom, e]
     return [False, -1]
-
-    #     dprint(flight.id + " Trying landing time: " + str(dom) + "  " + str(dom + flight.landing_time))
-    #     if check_landing_runway_available(dom, dom + flight.landing_time):
-    #         chosen_landing_start = dom
-    #         chosen_landing_end = dom + flight.landing_time
-    #         service_possibility = schedule_service(flight, chosen_landing_end)
-    #
-    #         if service_possibility[0] and service_possibility[1] != -1:
-    #             mark_landing_runway_busy(dom, dom + flight.landing_time)
-    #             answer = [True, chosen_landing_start, service_possibility[1]]
-    #             flight.assignment = [True, chosen_landing_start, service_possibility[1]]
-    #             return answer
-    # answer = deepcopy([False, -1])
-    # flight.assignment = [False, -1]
-    # return answer
 
 
 def schedule_service(flight, chosen_landing_end_time):
@@ -264,10 +318,15 @@ def schedule2(landing, gates, takingoff, unscheduled):
     if (len(unscheduled) == 0):
         dprint("DONE")
         return True
-
+    copied = deepcopy(unscheduled)
     unsch = unscheduled[0]
+    if unsch.id=='P24':
+        print unsch.new_land_domain
+        print unsch.new_takeoff_domain
     # For every possible value in the  domain of air time
     b = False
+    unsch.new_land_domain = deepcopy(reorder_by_overlap(unsch, unscheduled))
+    print unsch.new_land_domain
     for dom in unsch.new_land_domain:
         if b:
             break
@@ -282,16 +341,29 @@ def schedule2(landing, gates, takingoff, unscheduled):
                     if check_gates_available(dom + unsch.landing_time, e) and check_takeoff_runways_available(e,
                                                                                                               e + unsch.takeoff_time):
                         mark_landing_runway_busy(dom, dom + unsch.landing_time)
+
                         mark_gates_busy(dom + unsch.landing_time, e)
                         mark_takeoff_runways_busy(e, e + unsch.takeoff_time)
                         unsch.assignment = [True, dom, e]
 
                         unscheduled.remove(unsch)
+
+                        if update_landing_domains_for_other_flights(unscheduled):
+                            return False
+                        if update_gate_domains_for_other_flights(unscheduled):
+                            return False
+                        if update_takeoff_domains_for_other_flights(unscheduled):
+                            return False
+
+
+                        unscheduled = sorted(unscheduled, key=lambda f: len(f.new_land_domain))
                         answer = schedule2(landing, gates, takingoff, unscheduled)
                         if not answer:
                             unschedule_flight(unsch)
                             mark_landing_runway_busy(dom, dom + unsch.landing_time)
-                            unscheduled.insert(0, unsch)
+                            # unscheduled.insert(0, unsch)
+                            unscheduled = deepcopy(copied)
+
                         if answer:
                             dprint("done2")
                             return True
@@ -573,7 +645,7 @@ p_list = []
 
 def overlap(x1, y1, x2, y2):
     # return max(0, min(b, d) - max(a, c))
-    return max(x1,y1) <= min(x2,y2)
+    return max(x1, y1) <= min(x2, y2)
 
 
 def reorder_by_overlap(flight, flights):
@@ -591,7 +663,7 @@ def reorder_by_overlap(flight, flights):
                         count = count + 1
                         break
         map_const[val] = count
-    return sorted(map_const)
+    return sorted(map_const, reverse= True)
 
 
 def main():
@@ -619,8 +691,8 @@ def main():
     time2 = time.time()
     update_plane_l_domains()
     update_plane_t_domains()
-    # update_l_to_t()
-    # update_t_to_l()
+    update_l_to_t()
+    update_t_to_l()
     print time.time() - time2
 
     flights = deepcopy(p_list)
@@ -636,7 +708,7 @@ def main():
     # moves.sort(key=lambda move: check_move_value(grid, grid_size, move[0], move[1], player), reverse=True)
 
     for flight in flights:
-        flight.new_land_domain = reorder_by_overlap(flight, flights)
+        flight.new_land_domain = deepcopy(reorder_by_overlap(flight, flights))
 
     flights_for_assignment = deepcopy(flights)
 
