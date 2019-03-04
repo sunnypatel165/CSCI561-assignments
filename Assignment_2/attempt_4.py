@@ -4,7 +4,7 @@ from multiprocessing import Queue
 
 from copy import deepcopy
 
-debug = True
+debug = False
 minutes = 1000
 
 
@@ -213,7 +213,7 @@ def update_takeoff_domain_for_flight(flight, t):
 
 
 def update_landing_domains_for_other_flights(flights):
-    print("updating domain")
+    dprint("updating domain")
     for i in range(minutes):
         if landing_runways_available[i] == 0:
             for flight in flights:
@@ -240,7 +240,7 @@ def update_gate_domains_for_other_flights(flights):
     return False
 
 def update_takeoff_domains_for_other_flights(flights):
-    print("updating take off domain")
+    dprint("updating take off domain")
     for i in range(minutes):
         if takeoff_runways_available[i] == 0:
             for flight in flights:
@@ -317,16 +317,27 @@ def schedule2(landing, gates, takingoff, unscheduled):
     print_flights_ids(unscheduled)
     if (len(unscheduled) == 0):
         dprint("DONE")
+        print_flights_assignments(flights_for_assignment)
+        if debug == False:
+            f2 = open("output.txt", "w")
+            str2 = ""
+            for f in flights_for_assignment:
+                str2 += str(f.assignment[1]) + " " + str(f.assignment[2]) + "\n"
+            f2.write(str2)
+        else:
+            for f in flights_for_assignment:
+                print str(f.assignment[1]) + " " + str(f.assignment[2])
+        exit(0)
         return True
     copied = deepcopy(unscheduled)
     unsch = unscheduled[0]
-    if unsch.id=='P24':
-        print unsch.new_land_domain
-        print unsch.new_takeoff_domain
+    # if unsch.id=='P24':
+    #     print unsch.new_land_domain
+    #     print unsch.new_takeoff_domain
     # For every possible value in the  domain of air time
     b = False
     unsch.new_land_domain = deepcopy(reorder_by_overlap(unsch, unscheduled))
-    print unsch.new_land_domain
+    # print unsch.new_land_domain
     for dom in unsch.new_land_domain:
         if b:
             break
@@ -346,6 +357,11 @@ def schedule2(landing, gates, takingoff, unscheduled):
                         mark_takeoff_runways_busy(e, e + unsch.takeoff_time)
                         unsch.assignment = [True, dom, e]
 
+                        for original in flights_for_assignment:
+                            if original.id == unsch.id:
+                                dprint("assigining original" + unsch.id + str([True, dom, e]))
+                                original.assignment = deepcopy([True, dom, e])
+
                         unscheduled.remove(unsch)
 
                         if update_landing_domains_for_other_flights(unscheduled):
@@ -360,6 +376,11 @@ def schedule2(landing, gates, takingoff, unscheduled):
                         answer = schedule2(landing, gates, takingoff, unscheduled)
                         if not answer:
                             unschedule_flight(unsch)
+                            for original in flights_for_assignment:
+                                if original.id == unsch.id:
+                                    dprint("assigining original" + unsch.id + str([False, -1, -1]))
+                                    original.assignment = deepcopy([False, -1, -1])
+
                             mark_landing_runway_busy(dom, dom + unsch.landing_time)
                             # unscheduled.insert(0, unsch)
                             unscheduled = deepcopy(copied)
@@ -663,7 +684,7 @@ def reorder_by_overlap(flight, flights):
                         count = count + 1
                         break
         map_const[val] = count
-    return sorted(map_const, reverse= True)
+    return sorted(map_const)
 
 
 def main():
@@ -688,15 +709,15 @@ def main():
 
     p_list = deepcopy(flights)
 
-    time2 = time.time()
     update_plane_l_domains()
     update_plane_t_domains()
     update_l_to_t()
     update_t_to_l()
-    print time.time() - time2
 
     flights = deepcopy(p_list)
     print_flights(flights)
+
+    flights_for_assignment = deepcopy(flights)
     for flight in flights:
         flight.new_takeoff_domain = deepcopy(flight.t_set)
         flight.new_takeoff_domain = sorted(flight.new_takeoff_domain)
@@ -710,7 +731,6 @@ def main():
     for flight in flights:
         flight.new_land_domain = deepcopy(reorder_by_overlap(flight, flights))
 
-    flights_for_assignment = deepcopy(flights)
 
     dprint("=============================================")
 
