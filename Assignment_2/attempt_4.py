@@ -109,7 +109,7 @@ else:
 
 
 def read_file():
-    f1 = open("input0.txt", "r")
+    f1 = open("input3.txt", "r")
     line = f1.readline().strip().split()
     landing, gates, takingoff = int(line[0]), int(line[1]), int(line[2])
     n = int(f1.readline())
@@ -423,20 +423,20 @@ def update_plane_l_domains():
                             plane_in.l_set.add(l + plane.landing_time)
                             if plane_in not in landing_queue:
                                 landing_queue.append(plane_in)
-            for plane_in in p_list:
-                if plane == plane_in:
-                    continue
-                else:
-                    if l - plane_in.landing_time >= max(plane_in.l_set) or l - plane_in.landing_time <= min(plane_in.l_set):
-                        continue
-                    else:
-                        if l - plane_in.landing_time in plane_in.l_set:
-                            continue
-                        else:
-                            plane_in.l_set.add(l - plane_in.landing_time)
-                            if plane_in not in landing_queue:
-
-                                landing_queue.append(plane_in)
+            # for plane_in in p_list:
+            #     if plane == plane_in:
+            #         continue
+            #     else:
+            #         if l - plane_in.landing_time >= max(plane_in.l_set) or l - plane_in.landing_time <= min(plane_in.l_set):
+            #             continue
+            #         else:
+            #             if l - plane_in.landing_time in plane_in.l_set:
+            #                 continue
+            #             else:
+            #                 plane_in.l_set.add(l - plane_in.landing_time)
+            #                 if plane_in not in landing_queue:
+            #
+            #                     landing_queue.append(plane_in)
 
 
 def update_plane_t_domains():
@@ -464,19 +464,19 @@ def update_plane_t_domains():
                             plane_in.t_set.add(t + plane.takeoff_time)
                             if plane_in not in take_off_queue:
                                 take_off_queue.append(plane_in)
-            for plane_in in p_list:
-                if plane == plane_in:
-                    continue
-                else:
-                    if t - plane_in.takeoff_time >= max(plane_in.t_set) or t - plane_in.takeoff_time <= min(plane_in.t_set):
-                        continue
-                    else:
-                        if t - plane_in.takeoff_time in plane_in.t_set:
-                            continue
-                        else:
-                            plane_in.t_set.add(t - plane_in.takeoff_time)
-                            if plane_in not in take_off_queue:
-                                take_off_queue.append(plane_in)
+            # for plane_in in p_list:
+            #     if plane == plane_in:
+            #         continue
+            #     else:
+            #         if t - plane_in.takeoff_time >= max(plane_in.t_set) or t - plane_in.takeoff_time <= min(plane_in.t_set):
+            #             continue
+            #         else:
+            #             if t - plane_in.takeoff_time in plane_in.t_set:
+            #                 continue
+            #             else:
+            #                 plane_in.t_set.add(t - plane_in.takeoff_time)
+            #                 if plane_in not in take_off_queue:
+            #                     take_off_queue.append(plane_in)
 
 
 def update_t_to_l():
@@ -511,7 +511,8 @@ def update_t_to_l():
                         if plane == plane_in:
                             continue
                         else:
-                            if l + plane.landing_time >= max(plane_in.l_set) or l + plane.landing_time <= min(plane_in.l_set):
+                            if l + plane.landing_time >= max(plane_in.l_set) or l + plane.landing_time <= min(
+                                    plane_in.l_set):
                                 continue
                             else:
                                 if l + plane.landing_time in plane_in.l_set:
@@ -554,7 +555,8 @@ def update_l_to_t():
                         if plane == plane_in:
                             continue
                         else:
-                            if t + plane.takeoff_time >= max(plane_in.t_set) or t + plane.takeoff_time <= min(plane_in.t_set):
+                            if t + plane.takeoff_time >= max(plane_in.t_set) or t + plane.takeoff_time <= min(
+                                    plane_in.t_set):
                                 continue
                             else:
                                 if t + plane.takeoff_time in plane_in.t_set:
@@ -565,11 +567,31 @@ def update_l_to_t():
                                         take_off_queue.append(plane_in)
 
 
-
-
-
 flights_for_assignment = []
 p_list = []
+
+
+def overlap(x1, y1, x2, y2):
+    # return max(0, min(b, d) - max(a, c))
+    return max(x1,y1) <= min(x2,y2)
+
+
+def reorder_by_overlap(flight, flights):
+    map_const = {}
+    land_domains = flight.new_land_domain
+    for val in land_domains:
+        count = 0
+        for plane in flights:
+            if plane == flight:
+                continue
+            else:
+                plane_dom_list = plane.new_land_domain
+                for item in plane_dom_list:
+                    if overlap(item, item + plane.landing_time, val, val + flight.landing_time) != 0:
+                        count = count + 1
+                        break
+        map_const[val] = count
+    return sorted(map_const)
 
 
 def main():
@@ -597,8 +619,8 @@ def main():
     time2 = time.time()
     update_plane_l_domains()
     update_plane_t_domains()
-    update_l_to_t()
-    update_t_to_l()
+    # update_l_to_t()
+    # update_t_to_l()
     print time.time() - time2
 
     flights = deepcopy(p_list)
@@ -612,6 +634,9 @@ def main():
     dprint("===sorted===")
     print_flights(flights)
     # moves.sort(key=lambda move: check_move_value(grid, grid_size, move[0], move[1], player), reverse=True)
+
+    for flight in flights:
+        flight.new_land_domain = reorder_by_overlap(flight, flights)
 
     flights_for_assignment = deepcopy(flights)
 
