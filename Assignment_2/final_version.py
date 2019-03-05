@@ -2,7 +2,7 @@ from copy import deepcopy
 
 debug = True
 minutes = 1000
-
+flights_for_assignment = []
 
 class Flight:
 
@@ -274,7 +274,7 @@ def schedule2(landing, gates, takingoff, unscheduled):
     #     print unsch.new_takeoff_domain
     # For every possible value in the  domain of air time
     b = False
-    unsch.new_land_domain = deepcopy(reorder_by_overlap(unsch, unscheduled))
+    unsch.new_land_domain = deepcopy(least_constraining_value(unsch, unscheduled))
     # print unsch.new_land_domain
     for dom in unsch.new_land_domain:
         if b:
@@ -421,19 +421,6 @@ def update_plane_t_domains(flights):
                             plane_in.new_takeoff_domain.add(t + plane.takeoff_time)
                             if plane_in not in take_off_queue:
                                 take_off_queue.append(plane_in)
-            # for plane_in in flights:
-            #     if plane == plane_in:
-            #         continue
-            #     else:
-            #         if t - plane_in.takeoff_time >= max(plane_in.new_takeoff_domain) or t - plane_in.takeoff_time <= min(plane_in.new_takeoff_domain):
-            #             continue
-            #         else:
-            #             if t - plane_in.takeoff_time in plane_in.new_takeoff_domain:
-            #                 continue
-            #             else:
-            #                 plane_in.new_takeoff_domain.add(t - plane_in.takeoff_time)
-            #                 if plane_in not in take_off_queue:
-            #                     take_off_queue.append(plane_in)
 
 
 def update_t_to_l(flights):
@@ -524,14 +511,20 @@ def update_l_to_t(flights):
                                         take_off_queue.append(plane_in)
 
 
-flights_for_assignment = []
-
-def overlap(x1, y1, x2, y2):
+def overlap_in_range(x1, y1, x2, y2):
     return max(x1, y1) <= min(x2, y2)
 
 
-def reorder_by_overlap(flight, flights):
-    map_const = {}
+def detect_overlaps_with_val(flight, val):
+    plane_dom_list = flight.new_land_domain
+    for item in plane_dom_list:
+        if overlap_in_range(item, item + flight.landing_time, val, val + flight.landing_time) != 0:
+            return True
+    return False
+
+
+def least_constraining_value(flight, flights):
+    overlaps = {}
     land_domains = flight.new_land_domain
     for val in land_domains:
         count = 0
@@ -539,13 +532,10 @@ def reorder_by_overlap(flight, flights):
             if plane == flight:
                 continue
             else:
-                plane_dom_list = plane.new_land_domain
-                for item in plane_dom_list:
-                    if overlap(item, item + plane.landing_time, val, val + flight.landing_time) != 0:
-                        count = count + 1
-                        break
-        map_const[val] = count
-    return sorted(map_const)
+                if detect_overlaps_with_val(plane, val):
+                    count = count + 1
+        overlaps[val] = count
+    return sorted(overlaps)
 
 
 def main():
@@ -583,7 +573,7 @@ def main():
     print_flights(flights)
 
     for flight in flights:
-        flight.new_land_domain = deepcopy(reorder_by_overlap(flight, flights))
+        flight.new_land_domain = deepcopy(least_constraining_value(flight, flights))
 
     dprint("=============================================")
 
