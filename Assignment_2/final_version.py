@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-debug = True
+debug = False
 minutes = 1000
 flights_for_assignment = []
 
@@ -105,7 +105,7 @@ else:
 
 
 def read_file():
-    f1 = open("input1.txt", "r")
+    f1 = open("input3.txt", "r")
     line = f1.readline().strip().split()
     landing, gates, takingoff = int(line[0]), int(line[1]), int(line[2])
     n = int(f1.readline())
@@ -511,18 +511,6 @@ def update_l_to_t(flights):
                                         take_off_queue.append(plane_in)
 
 
-def overlap_in_range(x1, y1, x2, y2):
-    return max(x1, y1) <= min(x2, y2)
-
-
-def detect_overlaps_with_val(flight, val):
-    plane_dom_list = flight.new_land_domain
-    for item in plane_dom_list:
-        if overlap_in_range(item, item + flight.landing_time, val, val + flight.landing_time) != 0:
-            return True
-    return False
-
-
 def least_constraining_value(flight, flights):
     overlaps = {}
     land_domains = flight.new_land_domain
@@ -536,6 +524,28 @@ def least_constraining_value(flight, flights):
                     count = count + 1
         overlaps[val] = count
     return sorted(overlaps)
+
+
+def overlap_in_range(x1, y1, x2, y2):
+    return max(x1, y1) <= min(x2, y2)
+
+
+def detect_overlaps_with_val(flight, val):
+    plane_dom_list = flight.new_land_domain
+    for item in plane_dom_list:
+        if overlap_in_range(item, item + flight.landing_time, val, val + flight.landing_time) != 0:
+            return True
+    return False
+
+
+def sort_domains(flights):
+    for flight in flights:
+        flight.new_takeoff_domain = sorted(flight.new_takeoff_domain)
+        flight.new_land_domain = sorted(flight.new_land_domain)
+
+
+def sort_most_constrained_variable(flights):
+    flights = sorted(flights, key=lambda f: len(f.new_land_domain))
 
 
 def main():
@@ -564,16 +574,14 @@ def main():
     print_flights(flights)
 
     flights_for_assignment = deepcopy(flights)
-    for flight in flights:
-        flight.new_takeoff_domain = sorted(flight.new_takeoff_domain)
-        flight.new_land_domain = sorted(flight.new_land_domain)
+    sort_domains(flights)
 
-    flights = sorted(flights, key=lambda f: len(f.new_land_domain))
+    sort_most_constrained_variable(flights)
     dprint("===sorted===")
     print_flights(flights)
 
     for flight in flights:
-        flight.new_land_domain = deepcopy(least_constraining_value(flight, flights))
+        flight.new_land_domain = least_constraining_value(flight, flights)
 
     dprint("=============================================")
 
