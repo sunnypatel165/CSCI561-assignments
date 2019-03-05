@@ -109,7 +109,7 @@ else:
 
 
 def read_file():
-    f1 = open("input3.txt", "r")
+    f1 = open("input.txt", "r")
     line = f1.readline().strip().split()
     landing, gates, takingoff = int(line[0]), int(line[1]), int(line[2])
     n = int(f1.readline())
@@ -207,7 +207,7 @@ def update_takeoff_domain_for_flight(flight, t):
             # eligible = find_eligible_takeoff_times(flight, dom)
             # flight.new_takeoff_domain = set(flight.new_takeoff_domain) - set(eligible)
 
-    if len(flight.new_land_domain) == 0:
+    if len(flight.new_takeoff_domain) == 0:
         return True
     return False
 
@@ -327,7 +327,7 @@ def schedule2(landing, gates, takingoff, unscheduled):
         else:
             for f in flights_for_assignment:
                 print str(f.assignment[1]) + " " + str(f.assignment[2])
-        exit(0)
+        # exit(0)
         return True
     copied = deepcopy(unscheduled)
     unsch = unscheduled[0]
@@ -684,8 +684,6 @@ def reorder_by_overlap(flight, flights):
                         count = count + 1
                         break
         map_const[val] = count
-    print"test"
-    print sorted(map_const)
     return sorted(map_const)
 
 
@@ -752,4 +750,5 @@ def main():
 
 
 if __name__ == '__main__':
+    print "hi from final"
     main()

@@ -101,22 +101,8 @@ else:
 
 def read_file():
     f1 = open("input0.txt", "r")
-    line = f1.readline().s…
-Slept late .. coming in 1 hour
-Np
-Chala kya?
-Kuch
-Nhi yr backtracking m error tha
-Ok😔😔
-Tera fast hua backtracking m change karke
-[0]
-[0, 10, 20]
-[0, 10, 20, 30, 40, 50, 60]
-[0, 10, 20, 30, 40, 50, 60, 70, 80]
-[60, 65, 70, 75, 80]
-[60, 65, 70, 75, 80, 85, 90, 95, 100]
-[80, 85, 90, 95, 100, 105, 110, 115, 120, 125, 130, 135, 140, 145]
-[40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170]
+    line = f1.readline()
+
 def update_plane_l_domains():
     for p in p_list:
         p.l_set.add(0)
