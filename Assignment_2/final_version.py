@@ -288,26 +288,12 @@ def schedule2(landing, gates, takingoff, unscheduled):
                 for eligible in eligible_takeoff_times:
                     dprint(unsch.id + " Checking gates: " + str(dom + unsch.landing_time) + " " + str(eligible))
                     dprint(unsch.id + " Checking takeo: " + str(eligible) + " " + str(eligible + unsch.takeoff_time))
-                    if check_gates_available(dom + unsch.landing_time, eligible) and check_takeoff_runways_available(eligible,
-                                                                                                              eligible + unsch.takeoff_time):
-                        mark_landing_runway_busy(dom, dom + unsch.landing_time)
-
-                        mark_gates_busy(dom + unsch.landing_time, eligible)
-                        mark_takeoff_runways_busy(eligible, eligible + unsch.takeoff_time)
-                        unsch.assignment = [True, dom, eligible]
-
-                        for original in flights_for_assignment:
-                            if original.id == unsch.id:
-                                dprint("assigining original" + unsch.id + str([True, dom, eligible]))
-                                original.assignment = deepcopy([True, dom, eligible])
+                    if check_gates_available(dom + unsch.landing_time, eligible) and \
+                            check_takeoff_runways_available(eligible,eligible + unsch.takeoff_time):
+                        schedule_flight(unsch, dom, eligible)
 
                         unscheduled.remove(unsch)
-
-                        if update_landing_domains_for_other_flights(unscheduled):
-                            return False
-                        if update_gate_domains_for_other_flights(unscheduled):
-                            return False
-                        if update_takeoff_domains_for_other_flights(unscheduled):
+                        if not update_and_check_all_domains(unscheduled):
                             return False
 
                         unscheduled = sort_flights_most_constrained_variable(unscheduled)
@@ -333,6 +319,28 @@ def schedule2(landing, gates, takingoff, unscheduled):
                     landing_runways_available[i] = landing_runways_available[i] + 1
 
     return False
+
+
+def update_and_check_all_domains(unscheduled):
+    if update_landing_domains_for_other_flights(unscheduled):
+        return False
+    if update_gate_domains_for_other_flights(unscheduled):
+        return False
+    if update_takeoff_domains_for_other_flights(unscheduled):
+        return False
+    return True
+
+def schedule_flight(flight, landing_start_time, takeoff_start_time):
+    mark_landing_runway_busy(landing_start_time, landing_start_time + flight.landing_time)
+
+    mark_gates_busy(landing_start_time + flight.landing_time, takeoff_start_time)
+    mark_takeoff_runways_busy(takeoff_start_time, takeoff_start_time + flight.takeoff_time)
+    flight.assignment = [True, landing_start_time, takeoff_start_time]
+
+    for original in flights_for_assignment:
+        if original.id == flight.id:
+            dprint("assigining original" + flight.id + str([True, landing_start_time, takeoff_start_time]))
+            original.assignment = deepcopy([True, landing_start_time, takeoff_start_time])
 
 
 def unschedule_flight(flight):
