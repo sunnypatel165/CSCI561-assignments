@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-debug = False
+debug = True
 minutes = 1000
 flights_for_assignment = []
 
@@ -250,29 +250,31 @@ def schedule_takeoff(flight, chosen_service_end_time):
     return [False, -1]
 
 
+def print_output():
+    print_flights_assignments(flights_for_assignment)
+    if debug == False:
+        f2 = open("output.txt", "w")
+        str2 = ""
+        for f in flights_for_assignment:
+            str2 += str(f.assignment[1]) + " " + str(f.assignment[2]) + "\n"
+        f2.write(str2)
+    else:
+        for f in flights_for_assignment:
+            print str(f.assignment[1]) + " " + str(f.assignment[2])
+    # exit(0)
+
+
 def schedule2(landing, gates, takingoff, unscheduled):
     dprint("Trying to schedule:")
     print_flights_ids(unscheduled)
-    if (len(unscheduled) == 0):
+
+    if len(unscheduled) == 0:
         dprint("DONE")
-        print_flights_assignments(flights_for_assignment)
-        if debug == False:
-            f2 = open("output.txt", "w")
-            str2 = ""
-            for f in flights_for_assignment:
-                str2 += str(f.assignment[1]) + " " + str(f.assignment[2]) + "\n"
-            f2.write(str2)
-        else:
-            for f in flights_for_assignment:
-                print str(f.assignment[1]) + " " + str(f.assignment[2])
-        # exit(0)
+        print_output()
         return True
+
     copied = deepcopy(unscheduled)
     unsch = unscheduled[0]
-    # if unsch.id=='P24':
-    #     print unsch.new_land_domain
-    #     print unsch.new_takeoff_domain
-    # For every possible value in the  domain of air time
     b = False
     unsch.new_land_domain = deepcopy(least_constraining_value(unsch, unscheduled))
     # print unsch.new_land_domain
@@ -544,7 +546,7 @@ def sort_domains(flights):
         flight.new_land_domain = sorted(flight.new_land_domain)
 
 
-def sort_most_constrained_variable(flights):
+def sort_flights_most_constrained_variable(flights):
     flights = sorted(flights, key=lambda f: len(f.new_land_domain))
 
 
@@ -553,18 +555,6 @@ def main():
     initialise_time(landing, gates, takingoff)
 
     global flights_for_assignment
-    # global flights
-
-    # flights[0].new_land_domain = [0]
-    # flights[1].new_land_domain = [0, 10, 20]
-    # flights[2].new_land_domain = [0, 10, 20, 30, 40, 50, 60]
-    # flights[3].new_land_domain = [0, 10, 20, 30, 40, 50, 60, 70, 80]
-    #
-    # flights[0].new_takeoff_domain = [60, 70, 80]
-    # flights[1].new_takeoff_domain = [60, 70, 80, 90, 100]
-    # flights[2].new_takeoff_domain = [80, 90, 100, 110, 120, 130, 140]
-    # flights[3].new_takeoff_domain = [40, 80, 90, 100, 110, 120, 130, 140, 150, 160, 165, 170]
-
 
     update_plane_l_domains(flights)
     update_plane_t_domains(flights)
@@ -574,9 +564,10 @@ def main():
     print_flights(flights)
 
     flights_for_assignment = deepcopy(flights)
-    sort_domains(flights)
 
-    sort_most_constrained_variable(flights)
+    sort_domains(flights)
+    sort_flights_most_constrained_variable(flights)
+
     dprint("===sorted===")
     print_flights(flights)
 
