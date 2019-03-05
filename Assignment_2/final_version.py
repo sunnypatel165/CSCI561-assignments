@@ -6,6 +6,10 @@ flights_for_assignment = []
 input = "input1.txt"
 output = "output.txt"
 
+LANDING_RUNWAY = 1
+GATE = 2
+TAKEOFF_RUNWAY = 3
+
 
 class Flight:
 
@@ -154,19 +158,32 @@ def check_takeoff_runways_available(start, end):
 
 
 # mark busy
-def mark_landing_runway_busy(start, end):
-    for i in range(start, end, 1):
-        landing_runways_available[i] = landing_runways_available[i] - 1
+def mark_resource_busy(start, end, resource):
+    if resource == LANDING_RUNWAY:
+        for i in range(start, end, 1):
+            landing_runways_available[i] = landing_runways_available[i] - 1
+
+    if resource == GATE:
+        for i in range(start, end, 1):
+            gates_available[i] = gates_available[i] - 1
+
+    if resource == TAKEOFF_RUNWAY:
+        for i in range(start, end, 1):
+            takeoff_runways_available[i] = takeoff_runways_available[i] - 1
 
 
-def mark_gates_busy(start, end):
-    for i in range(start, end, 1):
-        gates_available[i] = gates_available[i] - 1
+def mark_resource_available(start, end, resource):
+    if resource == LANDING_RUNWAY:
+        for i in range(start, end, 1):
+            landing_runways_available[i] = landing_runways_available[i] + 1
 
+    if resource == GATE:
+        for i in range(start, end, 1):
+            gates_available[i] = gates_available[i] + 1
 
-def mark_takeoff_runways_busy(start, end):
-    for i in range(start, end, 1):
-        takeoff_runways_available[i] = takeoff_runways_available[i] - 1
+    if resource == TAKEOFF_RUNWAY:
+        for i in range(start, end, 1):
+            takeoff_runways_available[i] = takeoff_runways_available[i] + 1
 
 
 def find_eligible_takeoff_times(flight, selected_landing):
@@ -239,17 +256,6 @@ def print_state():
     dprint("Takeoff: " + str(takeoff_runways_available))
 
 
-def schedule_takeoff(flight, chosen_service_end_time):
-    dprint(flight.id + " Trying takeoff time: " + str(chosen_service_end_time) + "  " + str(
-        chosen_service_end_time + flight.takeoff_time))
-    if check_takeoff_runways_available(chosen_service_end_time, chosen_service_end_time + flight.takeoff_time):
-        chosen_takeoff_start_time = chosen_service_end_time
-
-        mark_takeoff_runways_busy(chosen_takeoff_start_time, chosen_service_end_time + flight.takeoff_time)
-        return [True, chosen_takeoff_start_time]
-    return [False, -1]
-
-
 def print_output():
     print_flights_assignments(flights_for_assignment)
     if not debug:
@@ -298,14 +304,15 @@ def schedule_flights(landing, gates, takingoff, unscheduled):
                         answer = schedule_flights(landing, gates, takingoff, unscheduled)
                         if not answer:
                             unschedule_flight(unsch)
-                            mark_landing_runway_busy(dom, dom + unsch.landing_time)
+                            mark_resource_busy(dom, dom + unsch.landing_time, LANDING_RUNWAY)
                             unscheduled = deepcopy(copied)
                         if answer:
                             return True
                 # undo landing
                 dprint("Tried all take off, undo landing")
-
-                mark_landing_runway_busy(dom, dom + unsch.landing_time)
+                mark_resource_available(dom, dom + unsch.landing_time, LANDING_RUNWAY)
+                # for i in range(dom, dom + unsch.landing_time):
+                #     landing_runways_available[i] = landing_runways_available[i] + 1
     return False
 
 
@@ -320,10 +327,10 @@ def update_and_check_all_domains(unscheduled):
 
 
 def schedule_flight(flight, landing_start_time, takeoff_start_time):
-    mark_landing_runway_busy(landing_start_time, landing_start_time + flight.landing_time)
+    mark_resource_busy(landing_start_time, landing_start_time + flight.landing_time, LANDING_RUNWAY)
+    mark_resource_busy(landing_start_time + flight.landing_time, takeoff_start_time, GATE)
+    mark_resource_busy(takeoff_start_time, takeoff_start_time + flight.takeoff_time, TAKEOFF_RUNWAY)
 
-    mark_gates_busy(landing_start_time + flight.landing_time, takeoff_start_time)
-    mark_takeoff_runways_busy(takeoff_start_time, takeoff_start_time + flight.takeoff_time)
     flight.assignment = [True, landing_start_time, takeoff_start_time]
     update_flight_for_assignment(flight, True, landing_start_time, takeoff_start_time)
 
@@ -333,6 +340,7 @@ def update_flight_for_assignment(flight, found, landing_start_time, takeoff_star
         if original.id == flight.id:
             dprint("assigining original" + flight.id + str([found, landing_start_time, takeoff_start_time]))
             original.assignment = deepcopy([True, landing_start_time, takeoff_start_time])
+
 
 def unschedule_flight(flight):
     dprint("==========")
@@ -501,7 +509,7 @@ def update_l_to_t(flights):
                         else:
                             if t + plane.takeoff_time >= max(
                                     plane_in.new_takeoff_domain) or t + plane.takeoff_time <= min(
-                                    plane_in.new_takeoff_domain):
+                                plane_in.new_takeoff_domain):
                                 continue
                             else:
                                 if t + plane.takeoff_time in plane_in.new_takeoff_domain:
