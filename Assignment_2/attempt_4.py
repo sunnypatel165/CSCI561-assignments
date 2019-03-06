@@ -4,7 +4,7 @@ from multiprocessing import Queue
 
 from copy import deepcopy
 
-debug = False
+debug = True
 minutes = 1000
 
 
@@ -109,7 +109,7 @@ else:
 
 
 def read_file():
-    f1 = open("input3.txt", "r")
+    f1 = open("input6.txt", "r")
     line = f1.readline().strip().split()
     landing, gates, takingoff = int(line[0]), int(line[1]), int(line[2])
     n = int(f1.readline())

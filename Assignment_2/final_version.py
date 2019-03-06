@@ -3,7 +3,7 @@ from copy import deepcopy
 debug = True
 minutes = 1000
 flights_for_assignment = []
-input_file = "input3.txt"
+input_file = "test7.txt"
 output_file = "output.txt"
 
 LANDING_RUNWAY = 1
@@ -126,21 +126,21 @@ def initialise_time(landing, gates, takeoff):
 
 # check availablity
 def check_landing_runway_available(start, end):
-    for i in range(start, end + 1, 1):
+    for i in range(start, end - 1, 1): # dumb - if [0, 10] then it should check for 0 to 9
         if landing_runways_available[i] <= 0:
             return False
     return True
 
 
 def check_gates_available(start, end):
-    for i in range(start, end + 1, 1):
+    for i in range(start, end - 1, 1):# dumb - if [0, 10] then it should check for 0 to 9
         if gates_available[i] <= 0:
             return False
     return True
 
 
 def check_takeoff_runways_available(start, end):
-    for i in range(start, end + 1, 1):
+    for i in range(start, end - 1, 1):# dumb - if [0, 10] then it should check for 0 to 9
         if takeoff_runways_available[i] <= 0:
             return False
     return True
@@ -185,7 +185,7 @@ def find_eligible_takeoff_times(flight, selected_landing):
 
 def update_domain_for_flight(flight, t):
     for dom in flight.new_land_domain:
-        if dom <= t <= dom + flight.landing_time:
+        if dom <= t < dom + flight.landing_time: # dumb - if [0, 10] then it should check for 0 to 9
             flight.new_land_domain.remove(dom)
     if len(flight.new_land_domain) == 0:
         return True
@@ -194,7 +194,7 @@ def update_domain_for_flight(flight, t):
 
 def update_takeoff_domain_for_flight(flight, t):
     for dom in flight.new_takeoff_domain:
-        if dom <= t <= dom + flight.takeoff_time:
+        if dom <= t < dom + flight.takeoff_time:# dumb - if [0, 10] then it should check for 0 to 9
             flight.new_takeoff_domain.remove(dom)
     if len(flight.new_takeoff_domain) == 0:
         return True
@@ -272,6 +272,8 @@ def schedule_flights(landing, gates, takingoff, unscheduled):
     unsch.new_land_domain = deepcopy(least_constraining_value(unsch, unscheduled))
 
     for dom in unsch.new_land_domain:
+        was_scheduled = False # dumb - otherwise will fail at bottom when it tries to unschedule
+        print_state()
         dprint(unsch.id + " Checking runway: " + str(dom) + " " + str(dom + unsch.landing_time))
         if check_landing_runway_available(dom, dom + unsch.landing_time):
             eligible_takeoff_times = find_eligible_takeoff_times(unsch, dom)
@@ -283,24 +285,35 @@ def schedule_flights(landing, gates, takingoff, unscheduled):
                     if check_gates_available(dom + unsch.landing_time, eligible) and \
                             check_takeoff_runways_available(eligible, eligible + unsch.takeoff_time):
 
+                        dprint("before schedule")
+                        print_state()
                         schedule_flight(unsch, dom, eligible)
+                        was_scheduled = True
+                        dprint("after schedule")
+                        print_state()
+                        print_flights(unscheduled)
                         unscheduled.remove(unsch)
                         if not update_and_check_all_domains(unscheduled):
-                            return False
-
+                            break
+                            # return False # can not return false as this will disallow further landings to be tried!!!!
+                        dprint("updated domains")
+                        print_flights(unscheduled)
                         unscheduled = sort_flights_most_constrained_variable(unscheduled)
 
                         answer = schedule_flights(landing, gates, takingoff, unscheduled)
                         if not answer:
                             dprint("Trying next take off ")
                             unschedule_flight(unsch)
-                            mark_resource_busy(dom, dom + unsch.landing_time, LANDING_RUNWAY)
+                            was_scheduled = False
                             unscheduled = deepcopy(copied)
                         if answer:
                             return True
                 # undo landing
                 dprint("Tried all take off, undo landing")
-                mark_resource_available(dom, dom + unsch.landing_time, LANDING_RUNWAY)
+                if was_scheduled:
+                    unschedule_flight(unsch)
+                unscheduled = deepcopy(copied)
+                # mark_resource_available(dom, dom + unsch.landing_time, LANDING_RUNWAY)
     return False
 
 
@@ -504,10 +517,18 @@ def main():
 
     global flights_for_assignment
 
-    prepare_flight_landing_domains(flights)
-    prepare_flight_takeoff_domains(flights)
-    update_l_to_t(flights)
-    update_t_to_l(flights)
+    # prepare_flight_landing_domains(flights)
+    # prepare_flight_takeoff_domains(flights)
+    # update_l_to_t(flights)
+    # update_t_to_l(flights)
+
+    for flight in flights:
+        for i in range(0, flight.max_air_time + 1, 1):
+            flight.new_land_domain.add(i)
+
+    for flight in flights:
+        for i in range(1000):
+            flight.new_takeoff_domain.add(i)
 
     print_flights(flights)
 
