@@ -3,7 +3,7 @@ from copy import deepcopy
 debug = True
 minutes = 1000
 flights_for_assignment = []
-input_file = "input0.txt"
+input_file = "input3.txt"
 output_file = "output.txt"
 
 LANDING_RUNWAY = 1
@@ -372,22 +372,22 @@ def setup_initial_landing_domains(flights):
 
 def prepare_flight_landing_domains(flights):
     setup_initial_landing_domains(flights)
-
     landing_queue = list()
-
     landing_queue.append(flights[0])
+    update_ac3_landing_domains(flights, landing_queue)
+
+
+def update_ac3_landing_domains(flights, landing_queue):
     while len(landing_queue) > 0:
         plane = landing_queue[0]
         del landing_queue[0]
         for landing_start_time in plane.new_land_domain:
             for flight in flights:
                 if plane != flight:
-                    if landing_start_time + plane.landing_time >= max(flight.new_land_domain) or \
-                            landing_start_time + plane.landing_time <= min(flight.new_land_domain):
-                        continue
-                    else:
-                        if landing_start_time + plane.landing_time not in flight.new_land_domain:
-                            flight.new_land_domain.add(landing_start_time + plane.landing_time)
+                    new_time = landing_start_time + plane.landing_time
+                    if max(flight.new_land_domain) >= new_time >= min(flight.new_land_domain):
+                        if new_time not in flight.new_land_domain:
+                            flight.new_land_domain.add(new_time)
                             if flight not in landing_queue:
                                 landing_queue.append(flight)
 
@@ -410,12 +410,10 @@ def prepare_flight_takeoff_domains(flights):
         for t in new_takeoff_domain:
             for plane_in in flights:
                 if plane != plane_in:
-                    if t + plane.takeoff_time >= max(plane_in.new_takeoff_domain) or \
-                            t + plane.takeoff_time <= min(plane_in.new_takeoff_domain):
-                        continue
-                    else:
-                        if t + plane.takeoff_time not in plane_in.new_takeoff_domain:
-                            plane_in.new_takeoff_domain.add(t + plane.takeoff_time)
+                    new_time = t + plane.takeoff_time
+                    if max(plane_in.new_takeoff_domain) >= new_time >= min(plane_in.new_takeoff_domain):
+                        if new_time not in plane_in.new_takeoff_domain:
+                            plane_in.new_takeoff_domain.add(new_time)
                             if plane_in not in take_off_queue:
                                 take_off_queue.append(plane_in)
 
@@ -443,21 +441,7 @@ def update_t_to_l(flights):
         if is_updated is True:
             landing_queue = list()
             landing_queue.append(plane)
-            while len(landing_queue) > 0:
-                plane = landing_queue[0]
-                del landing_queue[0]
-                new_land_domain = plane.new_land_domain
-                for l in new_land_domain:
-                    for plane_in in flights:
-                        if plane != plane_in:
-                            if l + plane.landing_time >= max(plane_in.new_land_domain) or l + plane.landing_time <= min(
-                                    plane_in.new_land_domain):
-                                continue
-                            else:
-                                if l + plane.landing_time not in plane_in.new_land_domain:
-                                    plane_in.new_land_domain.add(l + plane.landing_time)
-                                    if plane_in not in landing_queue:
-                                        landing_queue.append(plane_in)
+            update_ac3_landing_domains(flights, landing_queue)
 
 
 def update_l_to_t(flights):
@@ -492,12 +476,10 @@ def update_l_to_t(flights):
                         if plane == plane_in:
                             continue
                         else:
-                            if t + plane.takeoff_time >= max(plane_in.new_takeoff_domain) or \
-                                    t + plane.takeoff_time <= min(plane_in.new_takeoff_domain):
-                                continue
-                            else:
-                                if t + plane.takeoff_time not in plane_in.new_takeoff_domain:
-                                    plane_in.new_takeoff_domain.add(t + plane.takeoff_time)
+                            new_time = t + plane.takeoff_time
+                            if max(plane_in.new_takeoff_domain) >= new_time >= min(plane_in.new_takeoff_domain):
+                                if new_time not in plane_in.new_takeoff_domain:
+                                    plane_in.new_takeoff_domain.add(new_time)
                                     if plane_in not in take_off_queue:
                                         take_off_queue.append(plane_in)
 
