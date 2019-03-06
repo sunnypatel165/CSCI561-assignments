@@ -15,8 +15,6 @@ class Flight:
 
     def __init__(self, flight_id, max_air_time, landing_time, minimum_service_time, takeoff_time, maximum_service_time):
         self.id = "P" + str(flight_id)
-        self.dom_air_time = []
-        self.dom_service_time = []
         self.assignment = []
         self.new_land_domain = []
         self.new_takeoff_domain = []
@@ -25,8 +23,6 @@ class Flight:
         self.minimum_service_time = minimum_service_time
         self.takeoff_time = takeoff_time
         self.maximum_service_time = maximum_service_time
-        self.update_dom_air_time()
-        self.update_dom_service_time()
         self.new_land_domain = set()
         self.new_takeoff_domain = set()
 
@@ -47,14 +43,6 @@ class Flight:
               " Lands " + str(self.assignment[1]) +
               " Takes off " + str(self.assignment[2]))
 
-    def update_dom_air_time(self):
-        for i in range(0, self.max_air_time + 1, 1):
-            self.dom_air_time.append(i)
-
-    def update_dom_service_time(self):
-        for i in range(self.minimum_service_time, self.maximum_service_time + 1, 1):
-            self.dom_service_time.append(i)
-
     def reset_flight(self):
         self.assignment = []
 
@@ -63,7 +51,8 @@ class Flight:
                self.landing_time == other.landing_time and \
                self.minimum_service_time == other.minimum_service_time and \
                self.takeoff_time == other.takeoff_time and \
-               self.maximum_service_time == other.maximum_service_time
+               self.maximum_service_time == other.maximum_service_time and \
+               self.id == other.id
 
     def __hash__(self):
         return hash((self.max_air_time, self.landing_time, self.minimum_service_time, self.takeoff_time,
@@ -303,6 +292,7 @@ def schedule_flights(landing, gates, takingoff, unscheduled):
 
                         answer = schedule_flights(landing, gates, takingoff, unscheduled)
                         if not answer:
+                            dprint("Trying next take off ")
                             unschedule_flight(unsch)
                             mark_resource_busy(dom, dom + unsch.landing_time, LANDING_RUNWAY)
                             unscheduled = deepcopy(copied)
@@ -398,14 +388,10 @@ def setup_initial_takeoff_domains(flights):
         flight.new_takeoff_domain.add(flight.max_air_time + flight.landing_time + flight.maximum_service_time)
 
 
-def prepare_flight_takeoff_domains(flights):
-    setup_initial_takeoff_domains(flights)
-
-    take_off_queue = list()
-    take_off_queue.append(flights[0])
-    while len(take_off_queue) > 0:
-        plane = take_off_queue[0]
-        del take_off_queue[0]
+def update_ac3_takeoff_domains(flights, takeoff_queue):
+    while len(takeoff_queue) > 0:
+        plane = takeoff_queue[0]
+        del takeoff_queue[0]
         new_takeoff_domain = plane.new_takeoff_domain
         for t in new_takeoff_domain:
             for plane_in in flights:
@@ -414,8 +400,15 @@ def prepare_flight_takeoff_domains(flights):
                     if max(plane_in.new_takeoff_domain) >= new_time >= min(plane_in.new_takeoff_domain):
                         if new_time not in plane_in.new_takeoff_domain:
                             plane_in.new_takeoff_domain.add(new_time)
-                            if plane_in not in take_off_queue:
-                                take_off_queue.append(plane_in)
+                            if plane_in not in takeoff_queue:
+                                takeoff_queue.append(plane_in)
+
+
+def prepare_flight_takeoff_domains(flights):
+    setup_initial_takeoff_domains(flights)
+    takeoff_queue = list()
+    takeoff_queue.append(flights[0])
+    update_ac3_takeoff_domains(flights, takeoff_queue)
 
 
 def update_t_to_l(flights):
@@ -465,23 +458,9 @@ def update_l_to_t(flights):
                     is_updated = True
 
         if is_updated is True:
-            take_off_queue = list()
-            take_off_queue.append(plane)
-            while len(take_off_queue) > 0:
-                plane = take_off_queue[0]
-                del take_off_queue[0]
-                new_takeoff_domain = plane.new_takeoff_domain
-                for t in new_takeoff_domain:
-                    for plane_in in flights:
-                        if plane == plane_in:
-                            continue
-                        else:
-                            new_time = t + plane.takeoff_time
-                            if max(plane_in.new_takeoff_domain) >= new_time >= min(plane_in.new_takeoff_domain):
-                                if new_time not in plane_in.new_takeoff_domain:
-                                    plane_in.new_takeoff_domain.add(new_time)
-                                    if plane_in not in take_off_queue:
-                                        take_off_queue.append(plane_in)
+            takeoff_queue = list()
+            takeoff_queue.append(plane)
+            update_ac3_takeoff_domains(flights, takeoff_queue)
 
 
 def least_constraining_value(flight, flights):
