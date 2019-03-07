@@ -1,9 +1,9 @@
 from copy import deepcopy
 
-debug = False
+debug = True
 minutes = 1000
 flights_for_assignment = []
-input_file = "input3.txt"
+input_file = "input0.txt"
 output_file = "output.txt"
 
 LANDING_RUNWAY = 1
@@ -37,6 +37,7 @@ class Flight:
                str(self.maximum_service_time) + " " +
                str(self.new_land_domain) + " " +
                str(self.new_takeoff_domain) + " " +
+               str(self.new_land_domain_map) + " " +
                str(self.assignment))
 
     def print_assignment(self):
@@ -178,10 +179,10 @@ def mark_resource_available(start, end, resource):
 
 
 def find_eligible_takeoff_times(flight, selected_landing):
-    eligible = []
+    eligible = set()
     for dom in flight.new_takeoff_domain:
         if selected_landing + flight.landing_time + flight.minimum_service_time <= dom <= selected_landing + flight.landing_time + flight.maximum_service_time:
-            eligible.append(dom)
+            eligible.add(dom)
     return eligible
 
 
@@ -278,7 +279,7 @@ def schedule_flights(landing, gates, takingoff, unscheduled):
         print_state()
         dprint(unsch.id + " Checking runway: " + str(dom) + " " + str(dom + unsch.landing_time))
         if check_landing_runway_available(dom, dom + unsch.landing_time):
-            eligible_takeoff_times = find_eligible_takeoff_times(unsch, dom)
+            eligible_takeoff_times = unsch.new_land_domain_map[dom]
             dprint("Eligible takeoff times: " + str(eligible_takeoff_times))
             if len(eligible_takeoff_times) > 0:
                 for eligible in eligible_takeoff_times:
@@ -536,6 +537,11 @@ def main():
         for i in range(flight.landing_time + flight.minimum_service_time,
                        flight.max_air_time + flight.landing_time + flight.maximum_service_time + 1):
             flight.new_takeoff_domain.add(i)
+
+    for flight in flights:
+        for dom in flight.new_land_domain:
+            eligible = find_eligible_takeoff_times(flight, dom)
+            flight.new_land_domain_map[dom] = eligible
 
     print_flights(flights)
 
