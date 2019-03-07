@@ -1,9 +1,9 @@
 from copy import deepcopy
 
-debug = True
+debug = False
 minutes = 1000
 flights_for_assignment = []
-input_file = "input5.txt"
+input_file = "input3.txt"
 output_file = "output.txt"
 
 LANDING_RUNWAY = 1
@@ -456,10 +456,10 @@ def main():
     setup_initial_domains(flights)
     print_flights(flights)
 
-    flights_for_assignment = deepcopy(flights)
-
-    sort_domains(flights)
+    #sort_domains(flights)
     flights = sort_flights_most_constrained_variable(flights)
+
+    flights_for_assignment = deepcopy(flights)
 
     dprint("===sorted===")
     print_flights(flights)
