@@ -4,7 +4,7 @@ from copy import deepcopy
 debug = False
 minutes = 1000
 flights_for_assignment = OrderedDict()
-input_file = "input7.txt"
+input_file = "input3.txt"
 output_file = "output.txt"
 
 LANDING_RUNWAY = 1
@@ -254,11 +254,11 @@ def print_output():
         f2 = open(output_file, "w")
         str2 = ""
         for id, f in flights_for_assignment.items():
-            str2 += str(f.assignment[1]) + " " + str(f.assignment[2]) + "\n"
+            str2 += str(f[1]) + " " + str(f[2]) + "\n"
         f2.write(str2)
     else:
         for id, f in flights_for_assignment.items():
-            print str(f.assignment[1]) + " " + str(f.assignment[2])
+            print str(f[0]) + " " + str(f[1]) + " " + str(f[2])
 
 
 def schedule_flights(landing, gates, takingoff, unscheduled):
@@ -344,7 +344,7 @@ def schedule_flight(flight, landing_start_time, takeoff_start_time):
 
 
 def update_flight_for_assignment(flight, found, landing_start_time, takeoff_start_time):
-    flights_for_assignment[flight.id].assignment = deepcopy([True, landing_start_time, takeoff_start_time])
+    flights_for_assignment[flight.id] = [found, landing_start_time, takeoff_start_time]
 
 
 def unschedule_flight(flight):
@@ -369,6 +369,7 @@ def unschedule_flight(flight):
 
     print_state()
     dprint("==========")
+
 
 def least_constraining_value(flight, flights):
     overlaps = {}
@@ -415,6 +416,7 @@ def setup_initial_domains(flights):
                        flight.max_air_time + flight.landing_time + flight.maximum_service_time + 1):
             flight.new_takeoff_domain.add(i)
 
+
 def main():
     landing, gates, takingoff, flights = read_file()
     initialise_time(landing, gates, takingoff)
@@ -427,7 +429,7 @@ def main():
 
     # flights_for_assignment = deepcopy(flights)
     for flight in flights:
-        flights_for_assignment[flight.id] = deepcopy(flight)
+        flights_for_assignment[flight.id] = [False, -1, -1]
     dprint(flights_for_assignment)
 
     sort_domains(flights)
