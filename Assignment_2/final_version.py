@@ -126,21 +126,21 @@ def initialise_time(landing, gates, takeoff):
 
 # check availablity
 def check_landing_runway_available(start, end):
-    for i in range(start, end - 1, 1): # dumb - if [0, 10] then it should check for 0 to 9
+    for i in range(start, end - 1, 1):  # dumb - if [0, 10] then it should check for 0 to 9
         if landing_runways_available[i] <= 0:
             return False
     return True
 
 
 def check_gates_available(start, end):
-    for i in range(start, end - 1, 1):# dumb - if [0, 10] then it should check for 0 to 9
+    for i in range(start, end - 1, 1):  # dumb - if [0, 10] then it should check for 0 to 9
         if gates_available[i] <= 0:
             return False
     return True
 
 
 def check_takeoff_runways_available(start, end):
-    for i in range(start, end - 1, 1):# dumb - if [0, 10] then it should check for 0 to 9
+    for i in range(start, end - 1, 1):  # dumb - if [0, 10] then it should check for 0 to 9
         if takeoff_runways_available[i] <= 0:
             return False
     return True
@@ -185,7 +185,7 @@ def find_eligible_takeoff_times(flight, selected_landing):
 
 def update_domain_for_flight(flight, t):
     for dom in flight.new_land_domain:
-        if dom <= t < dom + flight.landing_time: # dumb - if [0, 10] then it should check for 0 to 9
+        if dom <= t < dom + flight.landing_time:  # dumb - if [0, 10] then it should check for 0 to 9
             flight.new_land_domain.remove(dom)
     if len(flight.new_land_domain) == 0:
         return True
@@ -194,7 +194,7 @@ def update_domain_for_flight(flight, t):
 
 def update_takeoff_domain_for_flight(flight, t):
     for dom in flight.new_takeoff_domain:
-        if dom <= t < dom + flight.takeoff_time:# dumb - if [0, 10] then it should check for 0 to 9
+        if dom <= t < dom + flight.takeoff_time:  # dumb - if [0, 10] then it should check for 0 to 9
             flight.new_takeoff_domain.remove(dom)
     if len(flight.new_takeoff_domain) == 0:
         return True
@@ -213,7 +213,7 @@ def update_landing_domains_for_other_flights(flights):
 
 def update_gate_domain_for_flight(flight, t):
     for dom in flight.new_land_domain:
-        if dom + flight.landing_time <= t <= dom + flight.landing_time + flight.minimum_service_time:
+        if dom + flight.landing_time <= t < dom + flight.landing_time + flight.minimum_service_time:
             flight.new_land_domain.remove(dom)
     if len(flight.new_land_domain) == 0:
         return True
@@ -272,7 +272,7 @@ def schedule_flights(landing, gates, takingoff, unscheduled):
     unsch.new_land_domain = deepcopy(least_constraining_value(unsch, unscheduled))
 
     for dom in unsch.new_land_domain:
-        was_scheduled = False # dumb - otherwise will fail at bottom when it tries to unschedule
+        was_scheduled = False  # dumb - otherwise will fail at bottom when it tries to unschedule
         print_state()
         dprint(unsch.id + " Checking runway: " + str(dom) + " " + str(dom + unsch.landing_time))
         if check_landing_runway_available(dom, dom + unsch.landing_time):
