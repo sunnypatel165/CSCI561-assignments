@@ -16,16 +16,17 @@ class Flight:
 
     def __init__(self, flight_id, max_air_time, landing_time, minimum_service_time, takeoff_time, maximum_service_time):
         self.id = "P" + str(flight_id)
-        self.assignment = []
-        self.new_land_domain = []
-        self.new_takeoff_domain = []
+
         self.max_air_time = max_air_time
         self.landing_time = landing_time
         self.minimum_service_time = minimum_service_time
         self.takeoff_time = takeoff_time
         self.maximum_service_time = maximum_service_time
-        self.new_land_domain = set()
-        self.new_takeoff_domain = set()
+
+        self.assignment = []
+
+        self.new_land_domain = []
+        self.new_takeoff_domain = []
         self.new_land_domain_map = {}
         self.new_land_domain_map = {}
 
@@ -272,7 +273,7 @@ def schedule_flights(landing, gates, takingoff, unscheduled):
 
     copied = deepcopy(unscheduled)
     unsch = unscheduled[0]
-    unsch.new_land_domain = deepcopy(least_constraining_value(unsch, unscheduled))
+    unsch.new_land_domain = least_constraining_value(unsch, unscheduled)
 
     for dom in unsch.new_land_domain:
         was_scheduled = False  # dumb - otherwise will fail at bottom when it tries to unschedule
@@ -409,12 +410,12 @@ def sort_flights_most_constrained_variable(flights):
 def setup_initial_domains(flights):
     for flight in flights:
         for i in range(0, flight.max_air_time + 1, 1):
-            flight.new_land_domain.add(i)
+            flight.new_land_domain.append(i)
 
     for flight in flights:
         for i in range(flight.landing_time + flight.minimum_service_time,
                        flight.max_air_time + flight.landing_time + flight.maximum_service_time + 1):
-            flight.new_takeoff_domain.add(i)
+            flight.new_takeoff_domain.append(i)
 
 
 def main():
@@ -427,19 +428,16 @@ def main():
 
     print_flights(flights)
 
-    # flights_for_assignment = deepcopy(flights)
     for flight in flights:
         flights_for_assignment[flight.id] = [False, -1, -1]
+
     dprint(flights_for_assignment)
 
-    sort_domains(flights)
+    # sort_domains(flights)
     flights = sort_flights_most_constrained_variable(flights)
 
     dprint("===sorted===")
     print_flights(flights)
-
-    # for flight in flights:
-    #     flight.new_land_domain = least_constraining_value(flight, flights)
 
     dprint("=============================================")
 
