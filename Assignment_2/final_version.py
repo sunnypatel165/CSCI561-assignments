@@ -4,7 +4,7 @@ from copy import deepcopy
 debug = False
 minutes = 1000
 flights_for_assignment = OrderedDict()
-input_file = "input3.txt"
+input_file = "input7.txt"
 output_file = "output.txt"
 
 LANDING_RUNWAY = 1
@@ -405,12 +405,7 @@ def sort_flights_most_constrained_variable(flights):
     return sorted(flights, key=lambda f: len(f.new_land_domain))
 
 
-def main():
-    landing, gates, takingoff, flights = read_file()
-    initialise_time(landing, gates, takingoff)
-
-    global flights_for_assignment
-
+def setup_initial_domains(flights):
     for flight in flights:
         for i in range(0, flight.max_air_time + 1, 1):
             flight.new_land_domain.add(i)
@@ -419,6 +414,14 @@ def main():
         for i in range(flight.landing_time + flight.minimum_service_time,
                        flight.max_air_time + flight.landing_time + flight.maximum_service_time + 1):
             flight.new_takeoff_domain.add(i)
+
+def main():
+    landing, gates, takingoff, flights = read_file()
+    initialise_time(landing, gates, takingoff)
+
+    global flights_for_assignment
+
+    setup_initial_domains(flights)
 
     print_flights(flights)
 
@@ -433,8 +436,8 @@ def main():
     dprint("===sorted===")
     print_flights(flights)
 
-    for flight in flights:
-        flight.new_land_domain = least_constraining_value(flight, flights)
+    # for flight in flights:
+    #     flight.new_land_domain = least_constraining_value(flight, flights)
 
     dprint("=============================================")
 
