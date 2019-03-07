@@ -78,7 +78,7 @@ else:
 
 
 def read_file():
-    f1 = open("test7.txt", "r")
+    f1 = open("input7.txt", "r")
     line = f1.readline().strip().split()
     landing, gates, takingoff = int(line[0]), int(line[1]), int(line[2])
     n = int(f1.readline())

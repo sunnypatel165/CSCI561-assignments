@@ -3,7 +3,7 @@ from copy import deepcopy
 debug = False
 minutes = 1000
 flights_for_assignment = []
-input_file = "input3.txt"
+input_file = "input.txt"
 output_file = "output.txt"
 
 LANDING_RUNWAY = 1

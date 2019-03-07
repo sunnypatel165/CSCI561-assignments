@@ -5,7 +5,8 @@ Created on Mon Mar  4 07:54:27 2019
 @author: User
 """
 from sortedcontainers import SortedSet
-import final_code
+import final_code_old
+import final_version
 
 
 planeList=[]
@@ -67,7 +68,6 @@ def read_output_file():
     
     for i in range(n_planes):
         var=file.readline()
-        print "====" + var
         if len(var)!=0:
             str = var.split()
             land = str[0]
@@ -119,14 +119,14 @@ def verify_solution():
     return True
 
 def main():
-    for i in range(7):
+    for i in range(11):
         print("Testing for input file",i)
         input_file="input"+str(i)+".txt"
         with open(input_file) as f:
             with open("input.txt", "w") as f1:
                 for line in f:
                     f1.write(line)
-        final_code.main()
+        final_version.main()
         
         read_input_file(input_file)
         read_output_file()
