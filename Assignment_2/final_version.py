@@ -1,10 +1,10 @@
 from collections import OrderedDict
 from copy import deepcopy
 
-debug = False
+debug = True
 minutes = 1000
 flights_for_assignment = OrderedDict()
-input_file = "input3.txt"
+input_file = "input0.txt"
 output_file = "output.txt"
 
 LANDING_RUNWAY = 1
@@ -79,7 +79,7 @@ def print_flights_assignments(flights):
     if not debug:
         return
     for id, f in flights.items():
-        f.print_assignment()
+        dprint(id + " " + str(f))
 
 
 def print_flights_ids(flights):
@@ -130,21 +130,24 @@ def initialise_time(landing, gates, takeoff):
 
 # check availablity
 def check_landing_runway_available(start, end):
-    for i in range(start, end - 1, 1):  # dumb - if [0, 10] then it should check for 0 to 9
+    for i in range(start, end, 1):
+        dprint("Checking landing runway: " + str(i))
         if landing_runways_available[i] <= 0:
             return False
     return True
 
 
 def check_gates_available(start, end):
-    for i in range(start, end - 1, 1):  # dumb - if [0, 10] then it should check for 0 to 9
+    for i in range(start, end, 1):
+        dprint("Checking gates runway: " + str(i))
         if gates_available[i] <= 0:
             return False
     return True
 
 
 def check_takeoff_runways_available(start, end):
-    for i in range(start, end - 1, 1):  # dumb - if [0, 10] then it should check for 0 to 9
+    for i in range(start, end, 1):
+        dprint("Checking takeoff runway: " + str(i))
         if takeoff_runways_available[i] <= 0:
             return False
     return True
@@ -296,7 +299,7 @@ def schedule_flights(landing, gates, takingoff, unscheduled):
                         dprint("after schedule")
                         print_state()
                         print_flights(unscheduled)
-                        unscheduled.remove(unsch)
+                        del unscheduled[0]
                         if not update_and_check_all_domains(unscheduled):
                             if was_scheduled:
                                 was_scheduled = False
@@ -375,13 +378,13 @@ def unschedule_flight(flight):
 def least_constraining_value(flight, flights):
     overlaps = {}
     land_domains = flight.new_land_domain
-    for val in land_domains:
+    for domain_value in land_domains:
         count = 0
         for plane in flights:
             if plane != flight:
-                if detect_overlaps_with_val(plane, val):
+                if detect_overlaps_with_domain_value(plane, domain_value):
                     count = count + 1
-        overlaps[val] = count
+        overlaps[domain_value] = count
     return sorted(overlaps)
 
 
@@ -389,10 +392,10 @@ def overlap_in_range(x1, y1, x2, y2):
     return max(x1, y1) <= min(x2, y2)
 
 
-def detect_overlaps_with_val(flight, val):
+def detect_overlaps_with_domain_value(flight, val):
     plane_dom_list = flight.new_land_domain
     for item in plane_dom_list:
-        if overlap_in_range(item, item + flight.landing_time, val, val + flight.landing_time) != 0:
+        if overlap_in_range(item, item + flight.landing_time - 1, val, val + flight.landing_time - 1) != 0:
             return True
     return False
 
