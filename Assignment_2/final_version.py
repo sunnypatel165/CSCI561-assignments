@@ -25,6 +25,8 @@ class Flight:
         self.maximum_service_time = maximum_service_time
         self.new_land_domain = set()
         self.new_takeoff_domain = set()
+        self.new_land_domain_map = {}
+        self.new_land_domain_map = {}
 
     def print_flight(self):
         dprint(self.id + " " +
@@ -531,7 +533,8 @@ def main():
             flight.new_land_domain.add(i)
 
     for flight in flights:
-        for i in range(1000):
+        for i in range(flight.landing_time + flight.minimum_service_time,
+                       flight.max_air_time + flight.landing_time + flight.maximum_service_time + 1):
             flight.new_takeoff_domain.add(i)
 
     print_flights(flights)
