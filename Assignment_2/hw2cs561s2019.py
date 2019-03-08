@@ -2,9 +2,9 @@ from collections import OrderedDict
 from copy import deepcopy
 
 debug = False
-minutes = 1000
+minutes = 2000
 flights_for_assignment = OrderedDict()
-input_file = "input13.txt"
+input_file = "input7.txt"
 output_file = "output.txt"
 
 LANDING_RUNWAY = 1
@@ -260,6 +260,7 @@ def schedule_flights(landing, gates, takingoff, unscheduled):
         was_scheduled = False  # dumb - otherwise will fail at bottom when it tries to unschedule
         if check_landing_runway_available(dom, dom + unsch.landing_time):
             eligible_takeoff_times = find_eligible_takeoff_times(unsch, dom)
+
             if len(eligible_takeoff_times) > 0:
                 for eligible in eligible_takeoff_times:
                     if check_gates_available(dom + unsch.landing_time, eligible) and \
@@ -267,7 +268,7 @@ def schedule_flights(landing, gates, takingoff, unscheduled):
 
                         schedule_flight(unsch, dom, eligible)
                         was_scheduled = True
-                        print_flights(unscheduled)
+
                         del unscheduled[0]
                         if not update_and_check_all_domains(unscheduled):
                             if was_scheduled:
@@ -276,7 +277,7 @@ def schedule_flights(landing, gates, takingoff, unscheduled):
                             unscheduled = deepcopy(copied)
                             continue
                             # return False # can not return false as this will disallow further landings to be tried!!!!
-                        print_flights(unscheduled)
+
                         unscheduled = sort_flights_most_constrained_variable(unscheduled)
 
                         answer = schedule_flights(landing, gates, takingoff, unscheduled)
@@ -286,6 +287,7 @@ def schedule_flights(landing, gates, takingoff, unscheduled):
                             unscheduled = deepcopy(copied)
                         if answer:
                             return True
+
                 # undo landing
                 if was_scheduled:
                     unschedule_flight(unsch)
@@ -339,7 +341,7 @@ def least_constraining_value(flight, flights):
     for domain_value in land_domains:
         count = 0
         for plane in flights:
-            if plane != flight:
+            if plane.id != flight.id:
                 if detect_overlaps_with_domain_value(plane, domain_value):
                     count = count + 1
         overlaps[domain_value] = count
