@@ -4,7 +4,7 @@ from copy import deepcopy
 debug = False
 minutes = 1000
 flights_for_assignment = OrderedDict()
-input_file = "input7.txt"
+input_file = "input13.txt"
 output_file = "output.txt"
 
 LANDING_RUNWAY = 1
@@ -31,15 +31,15 @@ class Flight:
         self.new_land_domain_map = {}
 
     def print_flight(self):
-        dprint(self.id + " " +
-               str(self.max_air_time) + " " +
-               str(self.landing_time) + " " +
-               str(self.minimum_service_time) + " " +
-               str(self.takeoff_time) + " " +
-               str(self.maximum_service_time) + " " +
-               str(self.new_land_domain) + " " +
-               str(self.new_takeoff_domain) + " " +
-               str(self.assignment))
+        print(self.id + " " +
+              str(self.max_air_time) + " " +
+              str(self.landing_time) + " " +
+              str(self.minimum_service_time) + " " +
+              str(self.takeoff_time) + " " +
+              str(self.maximum_service_time) + " " +
+              str(self.new_land_domain) + " " +
+              str(self.new_takeoff_domain) + " " +
+              str(self.assignment))
 
     def print_assignment(self):
         print(self.id +
@@ -79,7 +79,7 @@ def print_flights_assignments(flights):
     if not debug:
         return
     for id, f in flights.items():
-        dprint(id + " " + str(f))
+        print(id + " " + str(f))
 
 
 def print_flights_ids(flights):
@@ -88,16 +88,7 @@ def print_flights_ids(flights):
     st = ""
     for i in flights:
         st = st + i.id + " "
-    dprint(st)
-
-
-if debug == True:
-    def dprint(line):
-        if debug == True:
-            print line
-else:
-    def dprint(line):
-        return
+    print(st)
 
 
 def read_file():
@@ -131,7 +122,6 @@ def initialise_time(landing, gates, takeoff):
 # check availablity
 def check_landing_runway_available(start, end):
     for i in range(start, end, 1):
-        dprint("Checking landing runway: " + str(i))
         if landing_runways_available[i] <= 0:
             return False
     return True
@@ -139,7 +129,6 @@ def check_landing_runway_available(start, end):
 
 def check_gates_available(start, end):
     for i in range(start, end, 1):
-        dprint("Checking gates runway: " + str(i))
         if gates_available[i] <= 0:
             return False
     return True
@@ -147,7 +136,6 @@ def check_gates_available(start, end):
 
 def check_takeoff_runways_available(start, end):
     for i in range(start, end, 1):
-        dprint("Checking takeoff runway: " + str(i))
         if takeoff_runways_available[i] <= 0:
             return False
     return True
@@ -209,7 +197,6 @@ def update_takeoff_domain_for_flight(flight, t):
 
 
 def update_landing_domains_for_other_flights(flights):
-    dprint("updating domain")
     for i in range(minutes):
         if landing_runways_available[i] == 0:
             for flight in flights:
@@ -237,19 +224,12 @@ def update_gate_domains_for_other_flights(flights):
 
 
 def update_takeoff_domains_for_other_flights(flights):
-    dprint("updating take off domain")
     for i in range(minutes):
         if takeoff_runways_available[i] == 0:
             for flight in flights:
                 if update_takeoff_domain_for_flight(flight, i):
                     return True  # indicates empty
     return False
-
-
-def print_state():
-    dprint("Landing: " + str(landing_runways_available))
-    dprint("Gates  : " + str(gates_available))
-    dprint("Takeoff: " + str(takeoff_runways_available))
 
 
 def print_output():
@@ -266,11 +246,9 @@ def print_output():
 
 
 def schedule_flights(landing, gates, takingoff, unscheduled):
-    dprint("Trying to schedule:")
     print_flights_ids(unscheduled)
 
     if len(unscheduled) == 0:
-        dprint("DONE")
         print_output()
         return True
 
@@ -280,24 +258,15 @@ def schedule_flights(landing, gates, takingoff, unscheduled):
 
     for dom in unsch.new_land_domain:
         was_scheduled = False  # dumb - otherwise will fail at bottom when it tries to unschedule
-        print_state()
-        dprint(unsch.id + " Checking runway: " + str(dom) + " " + str(dom + unsch.landing_time))
         if check_landing_runway_available(dom, dom + unsch.landing_time):
             eligible_takeoff_times = find_eligible_takeoff_times(unsch, dom)
-            dprint("Eligible takeoff times: " + str(eligible_takeoff_times))
             if len(eligible_takeoff_times) > 0:
                 for eligible in eligible_takeoff_times:
-                    dprint(unsch.id + " Checking gates: " + str(dom + unsch.landing_time) + " " + str(eligible))
-                    dprint(unsch.id + " Checking takeo: " + str(eligible) + " " + str(eligible + unsch.takeoff_time))
                     if check_gates_available(dom + unsch.landing_time, eligible) and \
                             check_takeoff_runways_available(eligible, eligible + unsch.takeoff_time):
 
-                        dprint("before schedule")
-                        print_state()
                         schedule_flight(unsch, dom, eligible)
                         was_scheduled = True
-                        dprint("after schedule")
-                        print_state()
                         print_flights(unscheduled)
                         del unscheduled[0]
                         if not update_and_check_all_domains(unscheduled):
@@ -307,20 +276,17 @@ def schedule_flights(landing, gates, takingoff, unscheduled):
                             unscheduled = deepcopy(copied)
                             continue
                             # return False # can not return false as this will disallow further landings to be tried!!!!
-                        dprint("updated domains")
                         print_flights(unscheduled)
                         unscheduled = sort_flights_most_constrained_variable(unscheduled)
 
                         answer = schedule_flights(landing, gates, takingoff, unscheduled)
                         if not answer:
-                            dprint("Trying next take off ")
                             unschedule_flight(unsch)
                             was_scheduled = False
                             unscheduled = deepcopy(copied)
                         if answer:
                             return True
                 # undo landing
-                dprint("Tried all take off, undo landing")
                 if was_scheduled:
                     unschedule_flight(unsch)
                 unscheduled = deepcopy(copied)
@@ -352,11 +318,6 @@ def update_flight_for_assignment(flight, found, landing_start_time, takeoff_star
 
 
 def unschedule_flight(flight):
-    dprint("==========")
-    print_state()
-    dprint("Unscheduling: ")
-    dprint(flight.print_flight())
-
     if flight.assignment[0]:
         chosen_landing_start_time = flight.assignment[1]
         for i in range(chosen_landing_start_time, chosen_landing_start_time + flight.landing_time):
@@ -370,9 +331,6 @@ def unschedule_flight(flight):
             takeoff_runways_available[i] = takeoff_runways_available[i] + 1
     flight.assignment = [False, -1]
     update_flight_for_assignment(flight, False, -1, -1)
-
-    print_state()
-    dprint("==========")
 
 
 def least_constraining_value(flight, flights):
@@ -407,7 +365,7 @@ def sort_domains(flights):
 
 
 def sort_flights_most_constrained_variable(flights):
-    return sorted(flights, key=lambda f: (len(f.new_land_domain), -f.landing_time))
+    return sorted(flights, key=lambda f: (len(f.new_land_domain), max(f.new_takeoff_domain)))
 
 
 def setup_initial_domains(flights):
@@ -434,17 +392,11 @@ def main():
     for flight in flights:
         flights_for_assignment[flight.id] = [False, -1, -1]
 
-    dprint(flights_for_assignment)
-
-    # sort_domains(flights)
     flights = sort_flights_most_constrained_variable(flights)
 
-    dprint("===sorted===")
     print_flights(flights)
 
-    dprint("=============================================")
-
-    dprint(schedule_flights(landing, gates, takingoff, flights))
+    schedule_flights(landing, gates, takingoff, flights)
     print_flights(flights)
 
 
