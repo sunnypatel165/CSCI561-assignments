@@ -2,9 +2,9 @@ from collections import OrderedDict
 from copy import deepcopy
 
 debug = False
-minutes = 2000
+minutes = 3000
 flights_for_assignment = OrderedDict()
-input_file = "input7.txt"
+input_file = "input3.txt"
 output_file = "output.txt"
 
 LANDING_RUNWAY = 1
