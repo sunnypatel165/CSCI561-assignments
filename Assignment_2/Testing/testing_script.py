@@ -1,152 +1,132 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Mar  4 07:54:27 2019
-
-@author: User
-"""
-from sortedcontainers import SortedSet
-import final_code_old
-import final_version
+import array
 
 
-planeList=[]
-solutionSet=[]
-number_landing_runways=[]
-number_gates=[]
-number_takeOff_runway=[]
-LGT=[]
-minutes=1000
+def Get_input(inp):
+    global planes, L, G, T, N, inf, max_time, o_L, o_G, o_T
+    inf = float('inf')
+    myFile = open(inp)
+    data = myFile.readlines()
 
-class Plane:
-    def __init__(self,I,R,M,S,O,C):
-        self.index=I
-        self.R=R
-        self.M=M
-        self.S=S
-        self.O=O
-        self.C=C
-        self.landing=SortedSet([0,R])
-        self.takeOff=SortedSet([M+S,R+M+C])
-        self.land_updated=True
-        self.takeOff_updated=True
-        self.schedule=[]
+    numbers = data[0].split(" ")
+    if numbers[0] != '' and numbers[1] != '' and numbers[2] != '':
+        L = int(numbers[0])
+        G = int(numbers[1])
+        T = int(numbers[2])
 
-def read_input_file(input_file):
-    file = open(input_file,"r")
-    s=file.readline()
-    arr=s.split()
-    global LGT
-    for i in range(len(arr)):
-        LGT.append(int(arr[i]))
-    
-    n_planes=int(file.readline())
-    
-    global planeList
-    
-    for i in range(n_planes):
-        var=file.readline()
-        R,M,S,O,C=var.split()
-        planeList.append(Plane(i,int(R),int(M),int(S),int(O),int(C)))
+    numbers = data[1].split(" ")
+    if numbers[0] != '':
+        N = int(numbers[0])
 
-def read_output_file():
-    file = open(r"output.txt")
-    global planeList
-    n_planes=len(planeList)
-    global solutionSet
-    global solutionSet
-    global number_landing_runways
-    global number_gates
-    global number_takeOff_runway
-    global LGT
-    global minutes
-    planeList = []
-    solutionSet = []
-    number_landing_runways = []
-    number_gates = []
-    number_takeOff_runway = []
-    minutes = 1000
-    
-    for i in range(n_planes):
-        var=file.readline()
-        if len(var)!=0:
-            str = var.split()
-            land = str[0]
-            takeOff  = str[1]
-            temp=[]
-            temp.append(int(land))
-            temp.append(int(takeOff))
-            solutionSet.append(temp)
+    planes = []
 
-def initialize_arrays():
-    global number_landing_runways
-    global number_gates
-    global number_takeoff_runways
-    number_landing_runways = [LGT[0]] * minutes
-    number_gates = [LGT[1]] * minutes
-    number_takeoff_runways = [LGT[2]] * minutes
-    
-def mark_lr_as_busy(begin, end):
-    for i in range(begin, end, 1):
-        number_landing_runways[i] -= 1
+    for k in range(N):
+        numbers = data[k+2].split(" ")
+        for _ in range(len(numbers)):
+            if numbers[_] != '':
+                numbers[_] = int(numbers[_])
+        planes.append(numbers)
+
+    max_time = int(N * (max([row[1] for row in planes]) + max([row[3] for row in planes]) +
+                        max([row[4] for row in planes])) / min(L, G, T))
+
+    o_L = array.array('H', [0 for _ in range(max_time)])
+    o_G = array.array('H', [0 for _ in range(max_time)])
+    o_T = array.array('H', [0 for _ in range(max_time)])
 
 
-def mark_gates_as_busy(begin, end):
-    for i in range(begin, end, 1):
-        number_gates[i] -= 1
+def Get_output(out):
+    global output
+    myFile = open(out)
+    data = myFile.readlines()
+
+    output = []
+
+    for k in range(N):
+        numbers = data[k].split(" ")
+        for _ in range(len(numbers)):
+            if numbers[_] != '':
+                numbers[_] = int(numbers[_])
+        output.append(numbers)
 
 
-def mark_tr_as_busy(begin, end):
-    for i in range(begin, end, 1):
-        number_takeoff_runways[i] -= 1
+def Show_Conflicts():
+    for _ in range(N):
+        if output[_][0] > planes[_][0]:
+            print("violation R")
+
+        if output[_][1] > output[_][0] + planes[_][1] + planes[_][4]:
+            print("violation C")
+
+        if output[_][1] < output[_][0] + planes[_][1] + planes[_][2]:
+            print("violation S")
+
+    for _ in range(max_time):
+        if o_L[_] > L:
+            print("violation_o_L")
+        if o_G[_] > G:
+            print("violation_o_G")
+        if o_T[_] > T:
+            print("violation_o_T")
 
 
-def verify_solution():
-    n=len(planeList)
-    for i in range(n):
-        mark_lr_as_busy(solutionSet[i][0],solutionSet[i][0]+planeList[i].M)
-        mark_gates_as_busy(solutionSet[i][0]+planeList[i].M,solutionSet[i][1])
-        mark_tr_as_busy(solutionSet[i][1],solutionSet[i][1]+planeList[i].O)
-    
-    for i in range(minutes):
-        if number_landing_runways[i]<0 or number_gates[i]<0 or number_takeoff_runways[i]<0:
-            return False
-    
-    for i in range(n):
-        if 0<=solutionSet[i][0]<=planeList[i].R and solutionSet[i][0]+planeList[i].M+planeList[i].S<=solutionSet[i][1]<=solutionSet[i][0]+planeList[i].M+planeList[i].C:
-            continue
-        else:
-            return False
-    return True
+def Compile_LGT_arrays():
+    global maxindex
+    for _ in range(N):
+        offset = output[_][0]
+        for i in range(planes[_][1]):
+            o_L[i + offset] += 1
 
-def main():
-    for i in range(11):
-        print("Testing for input file",i)
-        input_file="input"+str(i)+".txt"
-        with open(input_file) as f:
-            with open("input.txt", "w") as f1:
-                for line in f:
-                    f1.write(line)
-        final_version.main()
-        
-        read_input_file(input_file)
-        read_output_file()
-        initialize_arrays()
-        
-        print("INPUT FILE for this iteration")
-        print("number of landing runways",LGT[0])
-        print("number of gates",LGT[1])
-        print("number of takeOff runways",LGT[2])
-        print("-----set of N planes----")
-        
-        for plane in planeList:
-            print(plane.R," ",plane.M," ",plane.S," ",plane.O," ",plane.C)
-        if verify_solution():
-            print("This is a valid assignment")
-        else:
-            print("This is an infeasible assignment")
-        print("oitput for the given input")
-        print(solutionSet)
-    
-    
-if __name__=='__main__':
-    main()
+        offset = output[_][0] + planes[_][1]
+        for i in range(offset, output[_][1]):
+            o_G[i] += 1
+
+        offset = output[_][1]
+        for i in range(planes[_][3]):
+            o_T[i + offset] += 1
+            if i + offset > maxindex:
+                maxindex = i + offset
+
+
+def Build_Output():
+    global maxindex
+    output_arrays = list([[0 for _ in range(maxindex + 1)] for _ in range(N)])
+    for i in range(N):
+        offset = output[i][0]
+        for _ in range(planes[i][1]):
+            output_arrays[i][_ + offset] = 1
+
+        offset = output[i][0] + planes[i][1]
+        for _ in range(offset, output[i][1]):
+            output_arrays[i][_] = 2
+
+        offset = output[i][1]
+        for _ in range(planes[i][3]):
+            output_arrays[i][_ + offset] = 3
+
+    file = open("BO.txt", "w")
+    for i in range(N):
+        for _ in range(maxindex):
+            file.write(str(output_arrays[i][_]) + " ")
+        file.write("\n")
+    file.write("\n")
+
+
+maxindex = 0
+Get_input("input21.txt")
+Get_output("output.txt")
+Compile_LGT_arrays()
+Show_Conflicts()
+Build_Output()
+
+file = open("LGT.txt", "w")
+for _ in range(max_time):
+    file.write(str(o_L[_]) + " ")
+file.write("\n")
+for _ in range(max_time):
+    file.write(str(o_G[_]) + " ")
+file.write("\n")
+for _ in range(max_time):
+    file.write(str(o_T[_]) + " ")
+file.write("\n")
+
+file.close()
