@@ -432,6 +432,7 @@ def setup_initial_domains(flights):
 def main():
     landing, gates, takingoff, flights = read_file()
     set_minutes(flights)
+    print minutes
     initialise_time(landing, gates, takingoff)
 
     global flights_for_assignment
