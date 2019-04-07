@@ -12,12 +12,11 @@ policy = []
 terminals = set()
 walls = set()
 
+up_outcomes = {}
+down_outcomes = {}
+left_outcomes = {}
+right_outcomes = {}
 
-#
-# def write_file(policy, grid_size):
-#     f1 = open("output.txt", "w")
-#     for i in range(grid_size):
-#         for j in range(grid_size)
 
 def file_write_do(grid_size):
     with open('output.txt', 'w') as the_file:
@@ -69,7 +68,7 @@ def read_file():
     discount = float(f1.readline())
 
     return grid, grid_size, probability, discount, reward
-#
+
 #
 # def # print_grid(grid, grid_size):
 #     if debug == False:
@@ -211,21 +210,35 @@ def get_utility_sum_of_outcomes(grid, grid_size, outcomes):
     return utility
 
 
+def pre_compute_outcomes(grid, grid_size, probability):
+    global up_outcomes
+    global down_outcomes
+    global left_outcomes
+    global right_outcomes
+    for i in range(grid_size):
+        for j in range(grid_size):
+            up_outcomes[(i, j)] = get_possible_outcomes_for_up_with_probability(grid, grid_size, i, j, probability,
+                                                                                0.5 * (1 - probability))
+            down_outcomes[(i, j)] = get_possible_outcomes_for_down_with_probability(grid, grid_size, i, j, probability,
+                                                                                    0.5 * (1 - probability))
+            left_outcomes[(i, j)] = get_possible_outcomes_for_left_with_probability(grid, grid_size, i, j, probability,
+                                                                                    0.5 * (1 - probability))
+            right_outcomes[(i, j)] = get_possible_outcomes_for_right_with_probability(grid, grid_size, i, j,
+                                                                                      probability,
+                                                                                      0.5 * (1 - probability))
+
+
 def get_utility_of_action(grid, grid_size, i, j, action, probability):
     outcomes = {}
     if action == UP:
-        outcomes = get_possible_outcomes_for_up_with_probability(grid, grid_size, i, j, probability,
-                                                                 0.5 * (1 - probability))
+        outcomes = up_outcomes[(i, j)]
     if action == DOWN:
-        outcomes = get_possible_outcomes_for_down_with_probability(grid, grid_size, i, j, probability,
-                                                                   0.5 * (1 - probability))
+        outcomes = down_outcomes[(i, j)]
     if action == LEFT:
-        outcomes = get_possible_outcomes_for_left_with_probability(grid, grid_size, i, j, probability,
-                                                                   0.5 * (1 - probability))
-
+        outcomes = left_outcomes[(i, j)]
     if action == RIGHT:
-        outcomes = get_possible_outcomes_for_right_with_probability(grid, grid_size, i, j, probability,
-                                                                    0.5 * (1 - probability))
+        outcomes = right_outcomes[(i, j)]
+
     return get_utility_sum_of_outcomes(grid, grid_size, outcomes)
 
 
@@ -270,6 +283,7 @@ def main():
     # dprint(probability)
     # dprint(discount)
     # dprint("=============")
+    pre_compute_outcomes(grid, grid_size, probability)
     value_iteration(grid, grid_size, probability, discount, reward)
     file_write_do(grid_size)
 
