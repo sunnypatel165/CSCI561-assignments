@@ -1,3 +1,4 @@
+import time
 from copy import deepcopy
 
 WALL = -float('inf')
@@ -48,7 +49,7 @@ def read_file():
         grid[int(walls2[0]) - 1][int(walls2[1]) - 1] = WALL
         policy[int(walls2[0]) - 1][int(walls2[1]) - 1] = 'N'
         walls.add((int(walls2[0]) - 1, int(walls2[1]) - 1))
-        print_grid(grid, grid_size)
+        # print_grid(grid, grid_size)
 
     num_terminal = int(f1.readline())
     for terminal in range(num_terminal):
@@ -68,34 +69,34 @@ def read_file():
     discount = float(f1.readline())
 
     return grid, grid_size, probability, discount, reward
-
-
-def print_grid(grid, grid_size):
-    if debug == False:
-        return
-    s = ""
-    for i in xrange(grid_size):
-        for j in xrange(grid_size):
-            s = s + str(grid[i][j]) + "\t"
-        s += '\n'
-    print s
-
-
-if debug == True:
-    def dprint(line):
-        if debug == True:
-            print line
-else:
-    def dprint(line):
-        return
+#
+#
+# def # print_grid(grid, grid_size):
+#     if debug == False:
+#         return
+#     s = ""
+#     for i in xrange(grid_size):
+#         for j in xrange(grid_size):
+#             s = s + str(grid[i][j]) + "\t"
+#         s += '\n'
+#     print s
+#
+#
+# if debug == True:
+#     def # dprint(line):
+#         if debug == True:
+#             print line
+# else:
+#     def # dprint(line):
+#         return
 
 
 def get_possible_outcomes_for_up_with_probability(grid, grid_size, i, j, probability, swing_probability):
     outcomes = {}
     if i == 0:
         outcomes[(i, j)] = 1
-        dprint("moves for up from " + str(i) + " " + str(j))
-        dprint(outcomes)
+        # dprint("moves for up from " + str(i) + " " + str(j))
+        # dprint(outcomes)
         return outcomes
     outcomes[(i, j)] = 0
     outcomes[(i - 1, j)] = probability
@@ -111,8 +112,8 @@ def get_possible_outcomes_for_up_with_probability(grid, grid_size, i, j, probabi
     if i - 1 < 0 or j + 1 >= grid_size or grid[i - 1][j + 1] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i - 1, j + 1)]
         outcomes[(i - 1, j + 1)] = 0
-    dprint("moves for up from " + str(i) + " " + str(j))
-    dprint(outcomes)
+    # dprint("moves for up from " + str(i) + " " + str(j))
+    # dprint(outcomes)
     return outcomes
 
 
@@ -120,8 +121,8 @@ def get_possible_outcomes_for_down_with_probability(grid, grid_size, i, j, proba
     outcomes = {}
     if i == grid_size - 1:
         outcomes[(i, j)] = 1
-        dprint("moves for down from " + str(i) + " " + str(j))
-        dprint(outcomes)
+        # dprint("moves for down from " + str(i) + " " + str(j))
+        # dprint(outcomes)
         return outcomes
 
     outcomes[(i, j)] = 0
@@ -138,8 +139,8 @@ def get_possible_outcomes_for_down_with_probability(grid, grid_size, i, j, proba
     if i + 1 >= grid_size or j + 1 >= grid_size or grid[i + 1][j + 1] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i + 1, j + 1)]
         outcomes[(i + 1, j + 1)] = 0
-    dprint("moves for down from " + str(i) + " " + str(j))
-    dprint(outcomes)
+    # dprint("moves for down from " + str(i) + " " + str(j))
+    # dprint(outcomes)
     return outcomes
 
 
@@ -147,8 +148,8 @@ def get_possible_outcomes_for_left_with_probability(grid, grid_size, i, j, proba
     outcomes = {}
     if j == 0:
         outcomes[(i, j)] = 1
-        dprint("moves for left from " + str(i) + " " + str(j))
-        dprint(outcomes)
+        # dprint("moves for left from " + str(i) + " " + str(j))
+        # dprint(outcomes)
         return outcomes
     outcomes[(i, j)] = 0
     outcomes[(i - 1, j - 1)] = swing_probability
@@ -169,8 +170,8 @@ def get_possible_outcomes_for_left_with_probability(grid, grid_size, i, j, proba
     if i + 1 >= grid_size or j - 1 < 0 or grid[i + 1][j - 1] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i + 1, j - 1)]
         outcomes[(i + 1, j - 1)] = 0
-    dprint("moves for left from " + str(i) + " " + str(j))
-    dprint(outcomes)
+    # dprint("moves for left from " + str(i) + " " + str(j))
+    # dprint(outcomes)
     return outcomes
 
 
@@ -178,8 +179,8 @@ def get_possible_outcomes_for_right_with_probability(grid, grid_size, i, j, prob
     outcomes = {}
     if j == grid_size - 1:
         outcomes[(i, j)] = 1
-        dprint("moves for right from " + str(i) + " " + str(j))
-        dprint(outcomes)
+        # dprint("moves for right from " + str(i) + " " + str(j))
+        # dprint(outcomes)
         return outcomes
 
     outcomes[(i, j)] = 0
@@ -196,14 +197,14 @@ def get_possible_outcomes_for_right_with_probability(grid, grid_size, i, j, prob
     if j + 1 >= grid_size or i + 1 >= grid_size or grid[i + 1][j + 1] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i + 1, j + 1)]
         outcomes[(i + 1, j + 1)] = 0
-    dprint("moves for right from " + str(i) + " " + str(j))
-    dprint(outcomes)
+    # dprint("moves for right from " + str(i) + " " + str(j))
+    # dprint(outcomes)
     return outcomes
 
 
 def get_utility_sum_of_outcomes(grid, grid_size, outcomes):
     utility = 0.0
-    dprint(outcomes)
+    # dprint(outcomes)
     for outcome in outcomes:
         if outcomes[outcome] > 0:
             utility = utility + float(grid[outcome[0]][outcome[1]]) * outcomes[outcome]
@@ -258,20 +259,26 @@ def value_iteration(grid, grid_size, probability, discount_factor, reward):
                     policy[i][j] = action
                     changed = True
 
-    print_grid(grid, grid_size)
-    print_grid(policy, grid_size)
+    # print_grid(grid, grid_size)
+    # print_grid(policy, grid_size)
 
 
 def main():
     grid, grid_size, probability, discount, reward = read_file()
-    dprint(grid_size)
-    print_grid(grid, grid_size)
-    dprint(probability)
-    dprint(discount)
-    dprint("=============")
+    # dprint(grid_size)
+    # print_grid(grid, grid_size)
+    # dprint(probability)
+    # dprint(discount)
+    # dprint("=============")
     value_iteration(grid, grid_size, probability, discount, reward)
     file_write_do(grid_size)
 
 
 if __name__ == '__main__':
+    time1 = time.time()
     main()
+    time2 = time.time()
+    if time2 > 1:
+        print time2 - time1
+    else:
+        print "No time"
