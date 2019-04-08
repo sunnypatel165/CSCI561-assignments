@@ -259,18 +259,19 @@ def get_best_action_based_on_utility(grid, grid_size, i, j, probability):
 
 def value_iteration(grid, grid_size, probability, discount_factor, reward):
     changed = True
-    grid_copy = []
-    while grid != grid_copy:
+    # grid_copy = []
+    while changed:
         changed = False
-        grid_copy = deepcopy(grid)
+        # grid_copy = deepcopy(grid)
 
         for i in range(grid_size):
             for j in range(grid_size):
                 if not (i, j) in walls and not (i, j) in terminals:
                     [utility, action] = get_best_action_based_on_utility(grid, grid_size, i, j, probability)
-                    grid[i][j] = reward + utility * discount_factor
-                    policy[i][j] = action
-                    changed = True
+                    if grid[i][j] !=  reward + utility * discount_factor:
+                        grid[i][j] = reward + utility * discount_factor
+                        policy[i][j] = action
+                        changed = True
 
     print_grid(grid, grid_size)
     print_grid(policy, grid_size)
