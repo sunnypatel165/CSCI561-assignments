@@ -17,7 +17,7 @@ down_outcomes = {}
 left_outcomes = {}
 right_outcomes = {}
 
-input_file = "input0.txt"
+input_file = "input.txt"
 output_file = "output.txt"
 
 
@@ -213,14 +213,14 @@ def get_utility_sum_of_outcomes(grid, grid_size, outcomes):
     return utility
 
 
-non_terminal_states = []
+non_terminal_states = set()
 
 
 def pre_compute_non_terminal_states(grid_size):
     for i in range(grid_size):
         for j in range(grid_size):
             if not (i, j) in walls and not (i, j) in terminals:
-                non_terminal_states.append((i, j))
+                non_terminal_states.add((i, j))
 
 
 def pre_compute_outcomes(grid, grid_size, probability):
