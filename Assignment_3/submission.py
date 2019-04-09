@@ -32,7 +32,7 @@ def print_output(grid_size):
             str2 = str2 + "\n"
         f2.write(str2)
     # else:
-        # print_grid(policy, grid_size)
+    # print_grid(policy, grid_size)
 
 
 def read_file():
@@ -213,6 +213,16 @@ def get_utility_sum_of_outcomes(grid, grid_size, outcomes):
     return utility
 
 
+non_terminal_states = []
+
+
+def pre_compute_non_terminal_states(grid_size):
+    for i in range(grid_size):
+        for j in range(grid_size):
+            if not (i, j) in walls and not (i, j) in terminals:
+                non_terminal_states.append((i, j))
+
+
 def pre_compute_outcomes(grid, grid_size, probability):
     global up_outcomes
     global down_outcomes
@@ -272,15 +282,13 @@ def value_iteration(grid, grid_size, probability, discount_factor, reward):
         changed = False
         # grid_copy = deepcopy(grid)
 
-        for i in range(grid_size):
-            for j in range(grid_size):
-                if not (i, j) in walls and not (i, j) in terminals:
-                    [utility, action] = get_best_action_based_on_utility(grid, grid_size, i, j, probability)
-                    new_utility = reward + utility * discount_factor
-                    if grid[i][j] != new_utility:
-                        grid[i][j] = new_utility
-                        policy[i][j] = action
-                        changed = True
+        for (i, j) in non_terminal_states:
+            [utility, action] = get_best_action_based_on_utility(grid, grid_size, i, j, probability)
+            new_utility = reward + utility * discount_factor
+            if grid[i][j] != new_utility:
+                grid[i][j] = new_utility
+                policy[i][j] = action
+                changed = True
 
     # print_grid(grid, grid_size)
     # print_grid(policy, grid_size)
@@ -293,6 +301,7 @@ def main():
     # dprint(probability)
     # dprint(discount)
     # dprint("=============")
+    pre_compute_non_terminal_states(grid_size)
     pre_compute_outcomes(grid, grid_size, probability)
     value_iteration(grid, grid_size, probability, discount, reward)
     print_output(grid_size)
