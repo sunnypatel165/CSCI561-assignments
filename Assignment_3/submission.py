@@ -17,25 +17,29 @@ down_outcomes = {}
 left_outcomes = {}
 right_outcomes = {}
 
+input_file = "input0.txt"
+output_file = "output.txt"
 
-def file_write_do(grid_size):
-    with open('output.txt', 'w') as the_file:
-        for i in range(0, grid_size, 1):
-            for j in range(0, grid_size, 1):
-                the_file.write(policy[i][j])
-                if j != grid_size - 1:
-                    the_file.write(",")
-            if i != grid_size - 1:
-                the_file.write("\n")
 
-    the_file.close()
+def print_output(grid_size):
+    if not debug:
+        f2 = open(output_file, "w")
+        str2 = ""
+        for i in range(grid_size):
+            for j in range(grid_size):
+                str2 += str(policy[i][j]) + ","
+            str2 = str2[:-1]
+            str2 = str2 + "\n"
+        f2.write(str2)
+    # else:
+        # print_grid(policy, grid_size)
 
 
 def read_file():
     global policy
     global terminals
     global walls
-    f1 = open("input0.txt", "r")
+    f1 = open(input_file, "r")
 
     grid_size = int(f1.readline())
     grid = [[-1234 for x in xrange(grid_size)] for y in xrange(grid_size)]
@@ -80,7 +84,7 @@ def read_file():
 #         s += '\n'
 #     print s
 
-#
+
 # if debug == True:
 #     def # dprint(line):
 #         if debug == True:
@@ -285,7 +289,7 @@ def main():
     # dprint("=============")
     pre_compute_outcomes(grid, grid_size, probability)
     value_iteration(grid, grid_size, probability, discount, reward)
-    file_write_do(grid_size)
+    print_output(grid_size)
 
 
 if __name__ == '__main__':
