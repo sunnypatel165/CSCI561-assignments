@@ -246,10 +246,15 @@ def get_utility_of_action(grid, grid_size, i, j, action, probability):
 
 
 def get_best_action_based_on_utility(grid, grid_size, i, j, probability):
-    up_utility = get_utility_of_action(grid, grid_size, i, j, UP, probability)
-    down_utility = get_utility_of_action(grid, grid_size, i, j, DOWN, probability)
-    left_utility = get_utility_of_action(grid, grid_size, i, j, LEFT, probability)
-    right_utility = get_utility_of_action(grid, grid_size, i, j, RIGHT, probability)
+    # up_utility = get_utility_of_action(grid, grid_size, i, j, UP, probability)
+    # down_utility = get_utility_of_action(grid, grid_size, i, j, DOWN, probability)
+    # left_utility = get_utility_of_action(grid, grid_size, i, j, LEFT, probability)
+    # right_utility = get_utility_of_action(grid, grid_size, i, j, RIGHT, probability)
+
+    up_utility = get_utility_sum_of_outcomes(grid, grid_size, up_outcomes[(i, j)])
+    down_utility = get_utility_sum_of_outcomes(grid, grid_size, down_outcomes[(i, j)])
+    left_utility = get_utility_sum_of_outcomes(grid, grid_size, left_outcomes[(i, j)])
+    right_utility = get_utility_sum_of_outcomes(grid, grid_size, right_outcomes[(i, j)])
 
     if up_utility >= down_utility and up_utility >= left_utility and up_utility >= right_utility:
         return [up_utility, 'U']
