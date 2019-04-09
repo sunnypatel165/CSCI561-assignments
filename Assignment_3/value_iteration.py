@@ -35,7 +35,7 @@ def read_file():
     global policy
     global terminals
     global walls
-    f1 = open("input4.txt", "r")
+    f1 = open("input0.txt", "r")
 
     grid_size = int(f1.readline())
     grid = [[-1234 for x in xrange(grid_size)] for y in xrange(grid_size)]
@@ -104,13 +104,13 @@ def get_possible_outcomes_for_up_with_probability(grid, grid_size, i, j, probabi
 
     if i - 1 < 0 or grid[i - 1][j] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i - 1, j)]
-        outcomes[(i - 1, j)] = 0
+        del outcomes[(i - 1, j)]
     if i - 1 < 0 or j - 1 < 0 or grid[i - 1][j - 1] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i - 1, j - 1)]
-        outcomes[(i - 1, j - 1)] = 0
+        del outcomes[(i - 1, j - 1)]
     if i - 1 < 0 or j + 1 >= grid_size or grid[i - 1][j + 1] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i - 1, j + 1)]
-        outcomes[(i - 1, j + 1)] = 0
+        del outcomes[(i - 1, j + 1)]
     dprint("moves for up from " + str(i) + " " + str(j))
     dprint(outcomes)
     return outcomes
@@ -131,13 +131,13 @@ def get_possible_outcomes_for_down_with_probability(grid, grid_size, i, j, proba
 
     if i + 1 >= grid_size or grid[i + 1][j] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i + 1, j)]
-        outcomes[(i + 1, j)] = 0
+        del outcomes[(i + 1, j)]
     if i + 1 >= grid_size or j - 1 < 0 or grid[i + 1][j - 1] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i + 1, j - 1)]
-        outcomes[(i + 1, j - 1)] = 0
+        del outcomes[(i + 1, j - 1)]
     if i + 1 >= grid_size or j + 1 >= grid_size or grid[i + 1][j + 1] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i + 1, j + 1)]
-        outcomes[(i + 1, j + 1)] = 0
+        del outcomes[(i + 1, j + 1)]
     dprint("moves for down from " + str(i) + " " + str(j))
     dprint(outcomes)
     return outcomes
@@ -158,17 +158,17 @@ def get_possible_outcomes_for_left_with_probability(grid, grid_size, i, j, proba
     # Wall in left
     if j - 1 < 0 or grid[i][j - 1] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i, j - 1)]
-        outcomes[(i, j - 1)] = 0
+        del outcomes[(i, j - 1)]
 
     # Wall in left top
     if i - 1 < 0 or j - 1 < 0 or grid[i - 1][j - 1] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i - 1, j - 1)]
-        outcomes[(i - 1, j - 1)] = 0
+        del outcomes[(i - 1, j - 1)]
 
     # Wall in left bottom
     if i + 1 >= grid_size or j - 1 < 0 or grid[i + 1][j - 1] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i + 1, j - 1)]
-        outcomes[(i + 1, j - 1)] = 0
+        del outcomes[(i + 1, j - 1)]
     dprint("moves for left from " + str(i) + " " + str(j))
     dprint(outcomes)
     return outcomes
@@ -189,13 +189,13 @@ def get_possible_outcomes_for_right_with_probability(grid, grid_size, i, j, prob
 
     if j + 1 >= grid_size or grid[i][j + 1] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i, j + 1)]
-        outcomes[(i, j + 1)] = 0
+        del outcomes[(i, j + 1)]
     if j + 1 >= grid_size or i - 1 < 0 or grid[i - 1][j + 1] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i - 1, j + 1)]
-        outcomes[(i - 1, j + 1)] = 0
+        del outcomes[(i - 1, j + 1)]
     if j + 1 >= grid_size or i + 1 >= grid_size or grid[i + 1][j + 1] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i + 1, j + 1)]
-        outcomes[(i + 1, j + 1)] = 0
+        del outcomes[(i + 1, j + 1)]
     dprint("moves for right from " + str(i) + " " + str(j))
     dprint(outcomes)
     return outcomes
@@ -205,8 +205,7 @@ def get_utility_sum_of_outcomes(grid, grid_size, outcomes):
     utility = 0.0
     dprint(outcomes)
     for outcome in outcomes:
-        if outcomes[outcome] > 0:
-            utility = utility + float(grid[outcome[0]][outcome[1]]) * outcomes[outcome]
+        utility = utility + float(grid[outcome[0]][outcome[1]]) * outcomes[outcome]
     return utility
 
 
@@ -268,7 +267,7 @@ def value_iteration(grid, grid_size, probability, discount_factor, reward):
             for j in range(grid_size):
                 if not (i, j) in walls and not (i, j) in terminals:
                     [utility, action] = get_best_action_based_on_utility(grid, grid_size, i, j, probability)
-                    if grid[i][j] !=  reward + utility * discount_factor:
+                    if grid[i][j] != reward + utility * discount_factor:
                         grid[i][j] = reward + utility * discount_factor
                         policy[i][j] = action
                         changed = True
