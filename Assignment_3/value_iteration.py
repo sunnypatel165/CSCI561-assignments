@@ -271,8 +271,9 @@ def value_iteration(grid, grid_size, probability, discount_factor, reward):
             for j in range(grid_size):
                 if not (i, j) in walls and not (i, j) in terminals:
                     [utility, action] = get_best_action_based_on_utility(grid, grid_size, i, j, probability)
-                    if grid[i][j] != reward + utility * discount_factor:
-                        grid[i][j] = reward + utility * discount_factor
+                    new_utility = reward + utility * discount_factor
+                    if grid[i][j] != new_utility:
+                        grid[i][j] = new_utility
                         policy[i][j] = action
                         changed = True
 
