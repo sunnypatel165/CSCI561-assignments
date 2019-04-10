@@ -17,7 +17,7 @@ down_outcomes = {}
 left_outcomes = {}
 right_outcomes = {}
 
-input_file = "input.txt"
+input_file = "input4.txt"
 output_file = "output.txt"
 
 
@@ -266,6 +266,10 @@ def get_best_action_based_on_utility(grid, grid_size, i, j, probability):
     left_utility = get_utility_sum_of_outcomes(grid, grid_size, left_outcomes[(i, j)])
     right_utility = get_utility_sum_of_outcomes(grid, grid_size, right_outcomes[(i, j)])
 
+    # dprint("up action for " + str(i) + " " + str(j) + str(up_utility))
+    # dprint("down action for " + str(i) + " " + str(j) + str(down_utility))
+    # dprint("left action for " + str(i) + " " + str(j) + str(left_utility))
+    # dprint("right action for " + str(i) + " " + str(j) + str(right_utility))
     if up_utility >= down_utility and up_utility >= left_utility and up_utility >= right_utility:
         return [up_utility, 'U']
     if down_utility >= up_utility and down_utility >= left_utility and down_utility >= right_utility:
@@ -275,24 +279,33 @@ def get_best_action_based_on_utility(grid, grid_size, i, j, probability):
     return [right_utility, 'R']
 
 
+count = 0
+
+
 def value_iteration(grid, grid_size, probability, discount_factor, reward):
+    global count
     changed = True
     # grid_copy = []
-    while changed:
+    difference = 0.0006
+    while difference > 0.0005:
         changed = False
+        difference = 0.0
+        count = count + 1
         # grid_copy = deepcopy(grid)
 
         for (i, j) in non_terminal_states:
             [utility, action] = get_best_action_based_on_utility(grid, grid_size, i, j, probability)
             new_utility = reward + utility * discount_factor
             if grid[i][j] != new_utility:
+                difference = difference + abs(grid[i][j] - new_utility)
                 grid[i][j] = new_utility
                 policy[i][j] = action
                 changed = True
-
+        difference = difference / (grid_size * grid_size)
+    #
     # print_grid(grid, grid_size)
     # print_grid(policy, grid_size)
-
+    # print count
 
 def main():
     grid, grid_size, probability, discount, reward = read_file()
@@ -305,6 +318,7 @@ def main():
     pre_compute_outcomes(grid, grid_size, probability)
     value_iteration(grid, grid_size, probability, discount, reward)
     print_output(grid_size)
+    print(count)
 
 
 if __name__ == '__main__':
