@@ -17,7 +17,7 @@ down_outcomes = {}
 left_outcomes = {}
 right_outcomes = {}
 
-input_file = "input4.txt"
+input_file = "input0.txt"
 output_file = "output.txt"
 
 
@@ -325,7 +325,7 @@ def value_iteration(grid, grid_size, probability, discount_factor, reward):
                 policy[i][j] = action
                 changed = True
                 # difference = difference / (grid_size * grid_size)
-
+                # updated_cells = updated_cells | (neighbors_map[(i, j)])
                 for (n1, n2) in neighbors_map[(i, j)]:
                     updated_cells.add((n1, n2))
     print_grid(grid, grid_size)
@@ -339,26 +339,27 @@ neighbors_map = {}
 def pre_compute_neighbors(grid, grid_size):
     for i in range(grid_size):
         for j in range(grid_size):
-            neighbors = list()
-            neighbors.append((i, j))
+            neighbors = set()
+            neighbors.add((i, j))
             if i - 1 >= 0 and j - 1 >= 0 and not (i - 1, j - 1) in walls and not (i - 1, j - 1) in terminals:
-                neighbors.append((i - 1, j - 1))
+                neighbors.add((i - 1, j - 1))
             if i - 1 >= 0 and j >= 0 and not (i - 1, j) in walls and not (i - 1, j) in terminals:
-                neighbors.append((i - 1, j))
+                neighbors.add((i - 1, j))
             if i - 1 >= 0 and j + 1 < grid_size and not (i - 1, j + 1) in walls and not (i - 1, j + 1) in terminals:
-                neighbors.append((i - 1, j + 1))
+                neighbors.add((i - 1, j + 1))
             if i >= 0 and j - 1 >= 0 and not (i, j - 1) in walls and not (i, j - 1) in terminals:
-                neighbors.append((i, j - 1))
+                neighbors.add((i, j - 1))
             if i >= 0 and j + 1 < grid_size and not (i, j + 1) in walls and not (i, j + 1) in terminals:
-                neighbors.append((i, j + 1))
+                neighbors.add((i, j + 1))
             if i + 1 < grid_size and j - 1 >= 0 and not (i + 1, j - 1) in walls and not (i + 1, j - 1) in terminals:
-                neighbors.append((i + 1, j - 1))
+                neighbors.add((i + 1, j - 1))
             if i + 1 < grid_size and j >= 0 and not (i + 1, j) in walls and not (i + 1, j) in terminals:
-                neighbors.append((i + 1, j))
+                neighbors.add((i + 1, j))
             if i + 1 < grid_size and j + 1 < grid_size and not (i + 1, j + 1) in walls and not (i + 1,
                                                                                                 j + 1) in terminals:
-                neighbors.append((i + 1, j + 1))
+                neighbors.add((i + 1, j + 1))
             neighbors_map[(i, j)] = neighbors
+    print neighbors_map
 
 
 def main():
