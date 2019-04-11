@@ -308,7 +308,10 @@ def value_iteration(grid, grid_size, probability, discount_factor, reward):
         count = count + 1
         # grid_copy = deepcopy(grid)
         updated_cells = list(updated_cells)
-        loop_list = deepcopy(updated_cells)
+        # loop_list = deepcopy(updated_cells)
+        loop_list = []
+        for x in updated_cells:
+            loop_list.append(x)
         # non_terminal_states = list(updated_cells)
         dprint("Updated Cells")
         dprint(non_terminal_states)
