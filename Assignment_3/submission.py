@@ -73,6 +73,7 @@ def read_file():
 
     return grid, grid_size, probability, discount, reward
 
+
 #
 # def # print_grid(grid, grid_size):
 #     if debug == False:
@@ -223,7 +224,7 @@ def pre_compute_non_terminal_states(grid_size):
                 non_terminal_states.add((i, j))
 
 
-def pre_compute_outcomes(grid, grid_size, probability):
+def pre_compute_outcomes(grid, grid_size, probability, swing_probility):
     global up_outcomes
     global down_outcomes
     global left_outcomes
@@ -231,14 +232,14 @@ def pre_compute_outcomes(grid, grid_size, probability):
     for i in range(grid_size):
         for j in range(grid_size):
             up_outcomes[(i, j)] = get_possible_outcomes_for_up_with_probability(grid, grid_size, i, j, probability,
-                                                                                0.5 * (1 - probability))
+                                                                                swing_probility)
             down_outcomes[(i, j)] = get_possible_outcomes_for_down_with_probability(grid, grid_size, i, j, probability,
-                                                                                    0.5 * (1 - probability))
+                                                                                    swing_probility)
             left_outcomes[(i, j)] = get_possible_outcomes_for_left_with_probability(grid, grid_size, i, j, probability,
-                                                                                    0.5 * (1 - probability))
+                                                                                    swing_probility)
             right_outcomes[(i, j)] = get_possible_outcomes_for_right_with_probability(grid, grid_size, i, j,
                                                                                       probability,
-                                                                                      0.5 * (1 - probability))
+                                                                                      swing_probility)
 
 
 def get_utility_of_action(grid, grid_size, i, j, action, probability):
@@ -371,7 +372,7 @@ def main():
     pre_compute_neighbors(grid, grid_size)
     # dprint(neighbors_map)
     pre_compute_non_terminal_states(grid_size)
-    pre_compute_outcomes(grid, grid_size, probability)
+    pre_compute_outcomes(grid, grid_size, probability, 0.5 * (1 - probability))
     value_iteration(grid, grid_size, probability, discount, reward)
     print_output(grid_size)
 
