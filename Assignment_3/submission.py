@@ -32,7 +32,7 @@ def print_output(grid_size):
             str2 = str2 + "\n"
         f2.write(str2)
     # else:
-    # print_grid(policy, grid_size)
+    #     # print_grid(policy, grid_size)
 
 
 def read_file():
@@ -73,7 +73,7 @@ def read_file():
 
     return grid, grid_size, probability, discount, reward
 
-
+#
 # def # print_grid(grid, grid_size):
 #     if debug == False:
 #         return
@@ -83,8 +83,8 @@ def read_file():
 #             s = s + str(grid[i][j]) + "\t"
 #         s += '\n'
 #     print s
-
-
+#
+#
 # if debug == True:
 #     def # dprint(line):
 #         if debug == True:
@@ -284,28 +284,82 @@ count = 0
 
 def value_iteration(grid, grid_size, probability, discount_factor, reward):
     global count
+    global non_terminal_states
     changed = True
     # grid_copy = []
     difference = 0.0006
-    while difference > 0.0005:
+    # non_terminal_states_list = list(non_terminal_states)
+
+    updated_cells = list(non_terminal_states)
+    # for (i, j) in updated_cells:
+    #     [utility, action] = get_best_action_based_on_utility(grid, grid_size, i, j, probability)
+    #     new_utility = reward + utility * discount_factor
+    #     grid[i][j] = new_utility
+    #     policy[i][j] = action
+    # non_terminal_states_list = sorted(updated_cells, key=lambda point: grid[point[0]][point[1]],
+    #                                   reverse=True)
+    # # dprint("sorted utilities")
+    # for (i, j) in non_terminal_states_list:
+    #     # dprint(str(i) + " " + str(j) + " " + str(grid[i][j]))
+
+    while len(updated_cells) > 0 and difference > 0.00005:
         changed = False
         difference = 0.0
         count = count + 1
         # grid_copy = deepcopy(grid)
-
-        for (i, j) in non_terminal_states:
+        updated_cells = list(updated_cells)
+        loop_list = deepcopy(updated_cells)
+        # non_terminal_states = list(updated_cells)
+        # dprint("Updated Cells")
+        # dprint(non_terminal_states)
+        # dprint(len(non_terminal_states))
+        updated_cells = set()
+        for (i, j) in loop_list:
             [utility, action] = get_best_action_based_on_utility(grid, grid_size, i, j, probability)
             new_utility = reward + utility * discount_factor
-            if grid[i][j] != new_utility:
-                difference = difference + abs(grid[i][j] - new_utility)
+            policy[i][j] = action
+            if grid[i][j] < new_utility:
+                # difference = difference + abs(grid[i][j] - new_utility)
+                difference = max(difference, abs(grid[i][j] - new_utility))
                 grid[i][j] = new_utility
                 policy[i][j] = action
                 changed = True
-        difference = difference / (grid_size * grid_size)
-    #
+                # difference = difference / (grid_size * grid_size)
+
+                for (n1, n2) in neighbors_map[(i, j)]:
+                    updated_cells.add((n1, n2))
     # print_grid(grid, grid_size)
     # print_grid(policy, grid_size)
-    # print count
+    print count
+
+
+neighbors_map = {}
+
+
+def pre_compute_neighbors(grid, grid_size):
+    for i in range(grid_size):
+        for j in range(grid_size):
+            neighbors = list()
+            neighbors.append((i, j))
+            if i - 1 >= 0 and j - 1 >= 0 and not (i - 1, j - 1) in walls and not (i - 1, j - 1) in terminals:
+                neighbors.append((i - 1, j - 1))
+            if i - 1 >= 0 and j >= 0 and not (i - 1, j) in walls and not (i - 1, j) in terminals:
+                neighbors.append((i - 1, j))
+            if i - 1 >= 0 and j + 1 < grid_size and not (i - 1, j + 1) in walls and not (i - 1, j + 1) in terminals:
+                neighbors.append((i - 1, j + 1))
+            if i >= 0 and j - 1 >= 0 and not (i, j - 1) in walls and not (i, j - 1) in terminals:
+                neighbors.append((i, j - 1))
+            if i >= 0 and j + 1 < grid_size and not (i, j + 1) in walls and not (i, j + 1) in terminals:
+                neighbors.append((i, j + 1))
+            if i + 1 < grid_size and j - 1 >= 0 and not (i + 1, j - 1) in walls and not (i + 1, j - 1) in terminals:
+                neighbors.append((i + 1, j - 1))
+            if i + 1 < grid_size and j >= 0 and not (i + 1, j) in walls and not (i + 1, j) in terminals:
+                neighbors.append((i + 1, j))
+            if i + 1 < grid_size and j + 1 < grid_size and not (i + 1, j + 1) in walls and not (i + 1,
+                                                                                                j + 1) in terminals:
+                neighbors.append((i + 1, j + 1))
+            neighbors_map[(i, j)] = neighbors
+
 
 def main():
     grid, grid_size, probability, discount, reward = read_file()
@@ -314,11 +368,12 @@ def main():
     # dprint(probability)
     # dprint(discount)
     # dprint("=============")
+    pre_compute_neighbors(grid, grid_size)
+    # dprint(neighbors_map)
     pre_compute_non_terminal_states(grid_size)
     pre_compute_outcomes(grid, grid_size, probability)
     value_iteration(grid, grid_size, probability, discount, reward)
     print_output(grid_size)
-    print(count)
 
 
 if __name__ == '__main__':
