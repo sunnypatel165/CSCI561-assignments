@@ -334,6 +334,7 @@ def value_iteration(grid, grid_size, probability, discount_factor, reward):
                     updated_cells.add((n1, n2))
     # print_grid(grid, grid_size)
     # print_grid(policy, grid_size)
+    print count
 
 
 neighbors_map = {}
