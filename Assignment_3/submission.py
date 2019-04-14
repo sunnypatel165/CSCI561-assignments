@@ -12,10 +12,10 @@ policy = []
 terminals = set()
 walls = set()
 
-up_outcomes = {}
-down_outcomes = {}
-left_outcomes = {}
-right_outcomes = {}
+# up_outcomes = {}
+# down_outcomes = {}
+# left_outcomes = {}
+# right_outcomes = {}
 
 input_file = "input4.txt"
 output_file = "output.txt"
@@ -49,18 +49,22 @@ def read_file():
     for wall in range(num_walls):
         wall_string = f1.readline()
         walls2 = wall_string.split(",")
-        grid[int(walls2[0]) - 1][int(walls2[1]) - 1] = WALL
-        policy[int(walls2[0]) - 1][int(walls2[1]) - 1] = 'N'
-        walls.add((int(walls2[0]) - 1, int(walls2[1]) - 1))
+        w1 = int(walls2[0])
+        w2 = int(walls2[1])
+        grid[w1 - 1][w2 - 1] = WALL
+        policy[w1 - 1][w2 - 1] = 'N'
+        walls.add((w1 - 1, w2 - 1))
         # print_grid(grid, grid_size)
 
     num_terminal = int(f1.readline())
     for terminal in range(num_terminal):
         terminal_string = f1.readline()
         terminal_state = terminal_string.split(",")
-        grid[int(terminal_state[0]) - 1][int(terminal_state[1]) - 1] = float(terminal_state[2])
-        policy[int(terminal_state[0]) - 1][int(terminal_state[1]) - 1] = 'E'
-        terminals.add((int(terminal_state[0]) - 1, int(terminal_state[1]) - 1))
+        t1 = int(terminal_state[0])
+        t2 = int(terminal_state[1])
+        grid[t1 - 1][t2 - 1] = float(terminal_state[2])
+        policy[t1 - 1][t2 - 1] = 'E'
+        terminals.add((t1 - 1, t2 - 1))
 
     probability = float(f1.readline())
     reward = float(f1.readline())
@@ -107,13 +111,44 @@ def get_possible_outcomes_for_up_with_probability(grid, grid_size, i, j, probabi
     outcomes[(i - 1, j - 1)] = swing_probability
     outcomes[(i - 1, j + 1)] = swing_probability
 
-    if i - 1 < 0 or grid[i - 1][j] == WALL:
+    if grid[i - 1][j] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i - 1, j)]
         del outcomes[(i - 1, j)]
-    if i - 1 < 0 or j - 1 < 0 or grid[i - 1][j - 1] == WALL:
+    if j - 1 < 0 or grid[i - 1][j - 1] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i - 1, j - 1)]
         del outcomes[(i - 1, j - 1)]
-    if i - 1 < 0 or j + 1 >= grid_size or grid[i - 1][j + 1] == WALL:
+    if j + 1 >= grid_size or grid[i - 1][j + 1] == WALL:
+        outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i - 1, j + 1)]
+        del outcomes[(i - 1, j + 1)]
+    # dprint("moves for up from " + str(i) + " " + str(j))
+    # dprint(outcomes)
+    return outcomes
+
+
+def get_possible_outcomes_for_up_with_probability2(grid, grid_size, i, j, probability, swing_probability):
+    outcomes = {}
+    utility_current = 0
+    utility_top_left = 0
+    utility_top_right = 0
+    utility_top = 0
+
+    if i == 0:
+        outcomes[(i, j)] = 1
+        # dprint("moves for up from " + str(i) + " " + str(j))
+        # dprint(outcomes)
+        return outcomes
+    outcomes[(i, j)] = 0
+    outcomes[(i - 1, j)] = probability
+    outcomes[(i - 1, j - 1)] = swing_probability
+    outcomes[(i - 1, j + 1)] = swing_probability
+
+    if grid[i - 1][j] == WALL:
+        outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i - 1, j)]
+        del outcomes[(i - 1, j)]
+    if j - 1 < 0 or grid[i - 1][j - 1] == WALL:
+        outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i - 1, j - 1)]
+        del outcomes[(i - 1, j - 1)]
+    if j + 1 >= grid_size or grid[i - 1][j + 1] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i - 1, j + 1)]
         del outcomes[(i - 1, j + 1)]
     # dprint("moves for up from " + str(i) + " " + str(j))
@@ -134,13 +169,13 @@ def get_possible_outcomes_for_down_with_probability(grid, grid_size, i, j, proba
     outcomes[(i + 1, j - 1)] = swing_probability
     outcomes[(i + 1, j + 1)] = swing_probability
 
-    if i + 1 >= grid_size or grid[i + 1][j] == WALL:
+    if grid[i + 1][j] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i + 1, j)]
         del outcomes[(i + 1, j)]
-    if i + 1 >= grid_size or j - 1 < 0 or grid[i + 1][j - 1] == WALL:
+    if j - 1 < 0 or grid[i + 1][j - 1] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i + 1, j - 1)]
         del outcomes[(i + 1, j - 1)]
-    if i + 1 >= grid_size or j + 1 >= grid_size or grid[i + 1][j + 1] == WALL:
+    if j + 1 >= grid_size or grid[i + 1][j + 1] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i + 1, j + 1)]
         del outcomes[(i + 1, j + 1)]
     # dprint("moves for down from " + str(i) + " " + str(j))
@@ -161,17 +196,17 @@ def get_possible_outcomes_for_left_with_probability(grid, grid_size, i, j, proba
     outcomes[(i + 1, j - 1)] = swing_probability
 
     # Wall in left
-    if j - 1 < 0 or grid[i][j - 1] == WALL:
+    if grid[i][j - 1] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i, j - 1)]
         del outcomes[(i, j - 1)]
 
     # Wall in left top
-    if i - 1 < 0 or j - 1 < 0 or grid[i - 1][j - 1] == WALL:
+    if i - 1 < 0 or grid[i - 1][j - 1] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i - 1, j - 1)]
         del outcomes[(i - 1, j - 1)]
 
     # Wall in left bottom
-    if i + 1 >= grid_size or j - 1 < 0 or grid[i + 1][j - 1] == WALL:
+    if i + 1 >= grid_size or grid[i + 1][j - 1] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i + 1, j - 1)]
         del outcomes[(i + 1, j - 1)]
     # dprint("moves for left from " + str(i) + " " + str(j))
@@ -192,13 +227,13 @@ def get_possible_outcomes_for_right_with_probability(grid, grid_size, i, j, prob
     outcomes[(i, j + 1)] = probability
     outcomes[(i + 1, j + 1)] = swing_probability
 
-    if j + 1 >= grid_size or grid[i][j + 1] == WALL:
+    if grid[i][j + 1] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i, j + 1)]
         del outcomes[(i, j + 1)]
-    if j + 1 >= grid_size or i - 1 < 0 or grid[i - 1][j + 1] == WALL:
+    if i - 1 < 0 or grid[i - 1][j + 1] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i - 1, j + 1)]
         del outcomes[(i - 1, j + 1)]
-    if j + 1 >= grid_size or i + 1 >= grid_size or grid[i + 1][j + 1] == WALL:
+    if i + 1 >= grid_size or grid[i + 1][j + 1] == WALL:
         outcomes[(i, j)] = outcomes[(i, j)] + outcomes[(i + 1, j + 1)]
         del outcomes[(i + 1, j + 1)]
     # dprint("moves for right from " + str(i) + " " + str(j))
@@ -206,12 +241,12 @@ def get_possible_outcomes_for_right_with_probability(grid, grid_size, i, j, prob
     return outcomes
 
 
-def get_utility_sum_of_outcomes(grid, grid_size, outcomes):
-    utility = 0.0
-    # dprint(outcomes)
-    for outcome in outcomes:
-        utility = utility + float(grid[outcome[0]][outcome[1]]) * outcomes[outcome]
-    return utility
+# def get_utility_sum_of_outcomes(grid, grid_size, outcomes):
+#     utility = 0.0
+#     # dprint(outcomes)
+#     for outcome in outcomes:
+#         utility = utility + float(grid[outcome[0]][outcome[1]]) * outcomes[outcome]
+#     return utility
 
 
 non_terminal_states = set()
@@ -224,58 +259,81 @@ def pre_compute_non_terminal_states(grid_size):
                 non_terminal_states.add((i, j))
 
 
-def pre_compute_outcomes(grid, grid_size, probability, swing_probility):
-    global up_outcomes
-    global down_outcomes
-    global left_outcomes
-    global right_outcomes
-    for i in range(grid_size):
-        for j in range(grid_size):
-            up_outcomes[(i, j)] = get_possible_outcomes_for_up_with_probability(grid, grid_size, i, j, probability,
-                                                                                swing_probility)
-            down_outcomes[(i, j)] = get_possible_outcomes_for_down_with_probability(grid, grid_size, i, j, probability,
-                                                                                    swing_probility)
-            left_outcomes[(i, j)] = get_possible_outcomes_for_left_with_probability(grid, grid_size, i, j, probability,
-                                                                                    swing_probility)
-            right_outcomes[(i, j)] = get_possible_outcomes_for_right_with_probability(grid, grid_size, i, j,
-                                                                                      probability,
-                                                                                      swing_probility)
+# def pre_compute_outcomes(grid, grid_size, probability, swing_probility):
+#     global up_outcomes
+#     global down_outcomes
+#     global left_outcomes
+#     global right_outcomes
+#     for i in range(grid_size):
+#         for j in range(grid_size):
+#             up_outcomes[(i, j)] = get_possible_outcomes_for_up_with_probability(grid, grid_size, i, j, probability,
+#                                                                                 swing_probility)
+#             down_outcomes[(i, j)] = get_possible_outcomes_for_down_with_probability(grid, grid_size, i, j, probability,
+#                                                                                     swing_probility)
+#             left_outcomes[(i, j)] = get_possible_outcomes_for_left_with_probability(grid, grid_size, i, j, probability,
+#                                                                                     swing_probility)
+#             right_outcomes[(i, j)] = get_possible_outcomes_for_right_with_probability(grid, grid_size, i, j,
+#                                                                                       probability,
+#                                                                                       swing_probility)
 
 
-def get_utility_of_action(grid, grid_size, i, j, action, probability):
-    outcomes = {}
-    if action == UP:
-        outcomes = up_outcomes[(i, j)]
-    if action == DOWN:
-        outcomes = down_outcomes[(i, j)]
-    if action == LEFT:
-        outcomes = left_outcomes[(i, j)]
-    if action == RIGHT:
-        outcomes = right_outcomes[(i, j)]
+def get_utility_sum_of_outcomes(grid, grid_size, outcomes):
+    utility = 0.0
+    # dprint(outcomes)
+    for outcome in outcomes:
+        utility = utility + float(grid[outcome[0]][outcome[1]]) * outcomes[outcome]
+    return utility
 
+
+def get_utility_of_action_up(grid, grid_size, i, j, action, probability, swing):
+    outcomes = get_possible_outcomes_for_up_with_probability(grid, grid_size, i, j, probability, swing)
     return get_utility_sum_of_outcomes(grid, grid_size, outcomes)
 
 
-def get_best_action_based_on_utility(grid, grid_size, i, j, probability):
-    # up_utility = get_utility_of_action(grid, grid_size, i, j, UP, probability)
-    # down_utility = get_utility_of_action(grid, grid_size, i, j, DOWN, probability)
-    # left_utility = get_utility_of_action(grid, grid_size, i, j, LEFT, probability)
-    # right_utility = get_utility_of_action(grid, grid_size, i, j, RIGHT, probability)
+def get_utility_of_action_down(grid, grid_size, i, j, action, probability, swing):
+    outcomes = get_possible_outcomes_for_down_with_probability(grid, grid_size, i, j, probability, swing)
+    return get_utility_sum_of_outcomes(grid, grid_size, outcomes)
 
-    up_utility = get_utility_sum_of_outcomes(grid, grid_size, up_outcomes[(i, j)])
-    down_utility = get_utility_sum_of_outcomes(grid, grid_size, down_outcomes[(i, j)])
-    left_utility = get_utility_sum_of_outcomes(grid, grid_size, left_outcomes[(i, j)])
-    right_utility = get_utility_sum_of_outcomes(grid, grid_size, right_outcomes[(i, j)])
 
-    # dprint("up action for " + str(i) + " " + str(j) + str(up_utility))
-    # dprint("down action for " + str(i) + " " + str(j) + str(down_utility))
-    # dprint("left action for " + str(i) + " " + str(j) + str(left_utility))
-    # dprint("right action for " + str(i) + " " + str(j) + str(right_utility))
-    if up_utility >= down_utility and up_utility >= left_utility and up_utility >= right_utility:
+def get_utility_of_action_left(grid, grid_size, i, j, action, probability, swing):
+    outcomes = get_possible_outcomes_for_left_with_probability(grid, grid_size, i, j, probability, swing)
+    return get_utility_sum_of_outcomes(grid, grid_size, outcomes)
+
+
+def get_utility_of_action_right(grid, grid_size, i, j, action, probability, swing):
+    outcomes = get_possible_outcomes_for_right_with_probability(grid, grid_size, i, j, probability, swing)
+    return get_utility_sum_of_outcomes(grid, grid_size, outcomes)
+
+
+# def get_utility_of_action(grid, grid_size, i, j, action, probability):
+#     outcomes = {}
+#     if action == UP:
+#         outcomes = get_possible_outcomes_for_up_with_probability(grid, grid_size, i, j, probability,
+#                                                                  0.5 * (1 - probability))
+#     if action == DOWN:
+#         outcomes = get_possible_outcomes_for_down_with_probability(grid, grid_size, i, j, probability,
+#                                                                    0.5 * (1 - probability))
+#     if action == LEFT:
+#         outcomes = get_possible_outcomes_for_left_with_probability(grid, grid_size, i, j, probability,
+#                                                                    0.5 * (1 - probability))
+#
+#     if action == RIGHT:
+#         outcomes = get_possible_outcomes_for_right_with_probability(grid, grid_size, i, j, probability,
+#                                                                     0.5 * (1 - probability))
+#     return get_utility_sum_of_outcomes(grid, grid_size, outcomes)
+
+
+def get_best_action_based_on_utility(grid, grid_size, i, j, probability, swing):
+    up_utility = get_utility_of_action_up(grid, grid_size, i, j, UP, probability, swing)
+    down_utility = get_utility_of_action_down(grid, grid_size, i, j, DOWN, probability, swing)
+    left_utility = get_utility_of_action_left(grid, grid_size, i, j, LEFT, probability, swing)
+    right_utility = get_utility_of_action_right(grid, grid_size, i, j, RIGHT, probability, swing)
+    max_util = max(up_utility, down_utility, left_utility, right_utility)
+    if up_utility == max_util:
         return [up_utility, 'U']
-    if down_utility >= up_utility and down_utility >= left_utility and down_utility >= right_utility:
+    if down_utility == max_util:
         return [down_utility, 'D']
-    if left_utility >= down_utility and left_utility >= up_utility and left_utility >= right_utility:
+    if left_utility == max_util:
         return [left_utility, 'L']
     return [right_utility, 'R']
 
@@ -292,34 +350,18 @@ def value_iteration(grid, grid_size, probability, discount_factor, reward):
     # non_terminal_states_list = list(non_terminal_states)
 
     updated_cells = list(non_terminal_states)
-    # for (i, j) in updated_cells:
-    #     [utility, action] = get_best_action_based_on_utility(grid, grid_size, i, j, probability)
-    #     new_utility = reward + utility * discount_factor
-    #     grid[i][j] = new_utility
-    #     policy[i][j] = action
-    # non_terminal_states_list = sorted(updated_cells, key=lambda point: grid[point[0]][point[1]],
-    #                                   reverse=True)
-    # # dprint("sorted utilities")
-    # for (i, j) in non_terminal_states_list:
-    #     # dprint(str(i) + " " + str(j) + " " + str(grid[i][j]))
+    swing = 0.5 * (1 - probability)
 
-    while len(updated_cells) > 0 and difference > 0.00005:
+    while len(updated_cells) > 0 and difference > 0.00006:
         changed = False
         difference = 0.0
         count = count + 1
         # grid_copy = deepcopy(grid)
-        updated_cells = list(updated_cells)
-        # loop_list = deepcopy(updated_cells)
-        loop_list = []
-        for x in updated_cells:
-            loop_list.append(x)
-        # non_terminal_states = list(updated_cells)
-        # dprint("Updated Cells")
-        # dprint(non_terminal_states)
-        # dprint(len(non_terminal_states))
+        updated_cells_list = list(updated_cells)
+        # print len(updated_cells_list)
         updated_cells = set()
-        for (i, j) in loop_list:
-            [utility, action] = get_best_action_based_on_utility(grid, grid_size, i, j, probability)
+        for (i, j) in updated_cells_list:
+            [utility, action] = get_best_action_based_on_utility(grid, grid_size, i, j, probability, swing)
             new_utility = reward + utility * discount_factor
             policy[i][j] = action
             if grid[i][j] < new_utility:
@@ -366,16 +408,31 @@ def pre_compute_neighbors(grid, grid_size):
 
 
 def main():
+    time1 = time.time()
     grid, grid_size, probability, discount, reward = read_file()
+    time2 = time.time()
+    if time2 > 1:
+        print time2 - time1
     # dprint(grid_size)
     # print_grid(grid, grid_size)
     # dprint(probability)
     # dprint(discount)
     # dprint("=============")
     pre_compute_neighbors(grid, grid_size)
+    time2 = time.time()
+    if time2 > 1:
+        print time2 - time1
     # dprint(neighbors_map)
     pre_compute_non_terminal_states(grid_size)
-    pre_compute_outcomes(grid, grid_size, probability, 0.5 * (1 - probability))
+    # time1 = time.time()
+    # pre_compute_outcomes(grid, grid_size, probability, 0.5 * (1 - probability))
+    # time2 = time.time()
+    # if time2 > 1:
+    #     print time2 - time1
+
+    time2 = time.time()
+    if time2 > 1:
+        print time2 - time1
     value_iteration(grid, grid_size, probability, discount, reward)
     print_output(grid_size)
 
