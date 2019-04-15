@@ -29,6 +29,7 @@ for i in range(0, terminal_state):
 
 p = float(fp.readline())
 q = float((1.0 - p)/2.0)
+print q
 reward = float(fp.readline())
 for i in range(0, grid_size):
     for j in range(0, grid_size):
@@ -40,7 +41,8 @@ for i in range(0, grid_size):
 
 gamma = float(fp.readline())
 discount_factor = gamma
-
+epsilon = 0.001 * (1 - discount_factor) / discount_factor
+# print matrix
 
 def check_boundary(i, j):
     if(0 <= i < grid_size) and (0 <= j < grid_size):
@@ -161,6 +163,8 @@ def right_move(matrix, i, j):
         utility_same = utility_same + q * matrix[i][j]
 
     utility_move_right = utility_right + utility_d_right + utility_d_left + utility_same
+    # print "right"
+    # print  utility_move_right, utility_right, utility_d_right,  utility_d_left , utility_same
     return utility_move_right
 
 
@@ -208,6 +212,8 @@ def max_action_utility(matrix, i, j):
     ut_left = left_move(matrix, i, j)
     ut_right = right_move(matrix, i, j)
     util = max(ut_up, ut_down, ut_left, ut_right)
+    # if i==0:
+    #     print(ut_up, ut_down, ut_left, ut_right)
     if util == ut_up:
         action = "U"
     elif util == ut_down:
@@ -231,10 +237,14 @@ def calc_utility():
                 policy[x][y] = "N"
             elif (x, y) in terminals:
                 policy[x][y] = "E"
-    while len(list_temp) > 0 and diff > 0.00006:
+    count =0
+    while len(list_temp) > 0 and diff > epsilon:
         diff = 0
         list_nodes = list(list_temp)
         list_temp = set()
+        # print("====iteration " + str(count))
+        # print matrix
+        count = count + 1
         for (x, y) in list_nodes:
             utility, action = max_action_utility(matrix, x, y)
             policy[x][y] = action
@@ -243,9 +253,10 @@ def calc_utility():
                 diff = max(diff, abs(matrix[x][y] - utility))
                 list_temp = add_neighbour_states(list_temp, x, y)
                 matrix[x][y] = utility
-
-
-
+        # if count==2:
+        #     print matrix
+        #     exit(0)
+    print count
     with open('output.txt', 'w') as the_file:
         for i in range(0, grid_size, 1):
             for j in range(0, grid_size, 1):
