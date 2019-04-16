@@ -84,7 +84,7 @@ def read_file():
     discount = float(f1.readline())
     swing = float((1.0 - probability) / 2.0)
     # print swing
-    epsilon = 0.001 * (1 - discount) / discount
+    epsilon = 0.0001 * (1 - discount) / discount
 
 
 def get_possible_outcomes_for_up_with_probability2(i, j):
